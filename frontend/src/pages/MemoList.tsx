@@ -8,6 +8,7 @@ import { MemoContext } from '@/types/memo';
 import { toast } from 'sonner';
 import { sendMemosToNotion, getNotionSettings } from '@/lib/notion';
 import { getTagStyleClasses, formatTagLabel } from '@/lib/tagStyles';
+import TagEditor from '@/components/TagEditor';
 
 const LANGUAGE_OPTIONS: Array<{ value: '' | 'en' | 'ko' | 'ja' | 'es' | 'fr' | 'de'; label: string }> = [
   { value: '', label: 'All' },
@@ -53,6 +54,7 @@ export default function MemoList() {
   // Editing state
   const [editingMemoId, setEditingMemoId] = useState<string | null>(null);
   const [editingText, setEditingText] = useState('');
+  const [editingTags, setEditingTags] = useState<string[]>([]);
 
   // Fetch filter params
   const filters = useReactMemo(() => {
@@ -72,9 +74,10 @@ export default function MemoList() {
   const updateMemo = useUpdateMemo();
 
   // Editing handlers
-  const handleMemoClick = (memoId: string, currentRefined: string) => {
+  const handleMemoClick = (memoId: string, currentRefined: string, currentTags: string[]) => {
     setEditingMemoId(memoId);
     setEditingText(currentRefined);
+    setEditingTags(currentTags);
   };
 
   const handleSaveEdit = async (memoId: string) => {
@@ -83,13 +86,20 @@ export default function MemoList() {
       return;
     }
 
+    if (editingTags.length === 0) {
+      toast.error('Please keep at least one tag');
+      return;
+    }
+
     try {
       await updateMemo.mutateAsync({
         id: memoId,
         refined: editingText.trim(),
+        tags: editingTags,
       });
       setEditingMemoId(null);
       setEditingText('');
+      setEditingTags([]);
       toast.success('Memo updated successfully');
     } catch (error) {
       toast.error('Failed to update memo');
@@ -100,6 +110,7 @@ export default function MemoList() {
   const handleCancelEdit = () => {
     setEditingMemoId(null);
     setEditingText('');
+    setEditingTags([]);
   };
 
   // Handle card click (toggle checkbox)
@@ -523,6 +534,11 @@ export default function MemoList() {
                     const memoLabels =
                       MEMO_TEXT_LABELS[memo.language as keyof typeof MEMO_TEXT_LABELS] ??
                       MEMO_TEXT_LABELS.en;
+                    const baseTagOptions = memo.language === 'ko' ? ALL_TAGS.ko : ALL_TAGS.en;
+                    const editingPool = editingMemoId === memo.id ? editingTags : memo.tags;
+                    const availableTagOptions = Array.from(
+                      new Set([...baseTagOptions, ...memo.tags, ...editingPool])
+                    );
 
                     return (
                       <div
@@ -579,11 +595,27 @@ export default function MemoList() {
 
                             {/* Summary - Editable */}
                             {editingMemoId === memo.id ? (
-                              <div className="space-y-3">
+                              <div className="space-y-4">
+                                <div
+                                  onClick={(e) => e.stopPropagation()}
+                                  className="space-y-2"
+                                >
+                                  <div className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground bg-muted/40 px-3 py-1 rounded-full">
+                                    Tags
+                                    <span className="text-[10px] font-normal text-muted-foreground/80">
+                                      ({editingTags.length}/3)
+                                    </span>
+                                  </div>
+                                  <TagEditor
+                                    tags={editingTags}
+                                    availableTags={availableTagOptions}
+                                    onUpdate={setEditingTags}
+                                    maxTags={3}
+                                  />
+                                </div>
                                 <textarea
                                   value={editingText}
                                   onChange={(e) => setEditingText(e.target.value)}
-                                  onBlur={() => handleSaveEdit(memo.id)}
                                   onKeyDown={(e) => {
                                     if (e.key === 'Escape') {
                                       handleCancelEdit();
@@ -605,6 +637,23 @@ export default function MemoList() {
                                     {memo.original_text}
                                   </p>
                                 </div>
+                                <div
+                                  className="flex justify-end gap-2 pt-2"
+                                  onClick={(e) => e.stopPropagation()}
+                                >
+                                  <button
+                                    onClick={handleCancelEdit}
+                                    className="px-3 py-1.5 text-sm rounded-lg border border-border hover:bg-muted transition-colors"
+                                  >
+                                    Cancel
+                                  </button>
+                                  <button
+                                    onClick={() => handleSaveEdit(memo.id)}
+                                    className="px-3 py-1.5 text-sm rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+                                  >
+                                    Save
+                                  </button>
+                                </div>
                               </div>
                             ) : (
                               <div className="space-y-4">
@@ -612,7 +661,7 @@ export default function MemoList() {
                                   data-editable
                                   onClick={(e) => {
                                     e.stopPropagation();
-                                    handleMemoClick(memo.id, memo.refined);
+                                    handleMemoClick(memo.id, memo.refined, memo.tags);
                                   }}
                                   className="cursor-pointer space-y-2"
                                 >

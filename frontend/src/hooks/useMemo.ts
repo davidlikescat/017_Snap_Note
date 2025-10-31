@@ -332,7 +332,7 @@ export function useOptimisticCreateMemo() {
 
       return { previousMemos };
     },
-    onError: (err, newMemo, context) => {
+    onError: (_err, _newMemo, context) => {
       // Rollback on error
       if (context?.previousMemos) {
         queryClient.setQueryData([QUERY_KEY], context.previousMemos);
