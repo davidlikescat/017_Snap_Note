@@ -1,0 +1,254 @@
+import { useState, useMemo } from 'react';
+import { Link } from 'react-router-dom';
+import { ArrowLeft, Search, Filter, Loader2 } from 'lucide-react';
+import { useMemos } from '@/hooks/useMemo';
+import { formatDate } from '@/lib/utils';
+import { ALL_TAGS, CONTEXT_TYPES } from '@/lib/constants';
+import { MemoContext } from '@/types/memo';
+
+export default function MemoList() {
+  const [searchQuery, setSearchQuery] = useState('');
+  const [showFilters, setShowFilters] = useState(false);
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [selectedContext, setSelectedContext] = useState<MemoContext | ''>('');
+  const [selectedLanguage, setSelectedLanguage] = useState<'en' | 'ko' | ''>('');
+
+  // Fetch memos with filters
+  const filters = useMemo(() => {
+    const f: any = {};
+    if (selectedTags.length > 0) f.tags = selectedTags;
+    if (selectedContext) f.context = selectedContext;
+    if (selectedLanguage) f.language = selectedLanguage;
+    if (searchQuery.trim()) f.search = searchQuery.trim();
+    return f;
+  }, [selectedTags, selectedContext, selectedLanguage, searchQuery]);
+
+  const { data: memos = [], isLoading, isError, error } = useMemos(filters);
+
+  const handleTagToggle = (tag: string) => {
+    if (selectedTags.includes(tag)) {
+      setSelectedTags(selectedTags.filter((t) => t !== tag));
+    } else {
+      setSelectedTags([...selectedTags, tag]);
+    }
+  };
+
+  const clearFilters = () => {
+    setSelectedTags([]);
+    setSelectedContext('');
+    setSelectedLanguage('');
+    setSearchQuery('');
+  };
+
+  const hasFilters =
+    selectedTags.length > 0 ||
+    selectedContext !== '' ||
+    selectedLanguage !== '' ||
+    searchQuery.trim() !== '';
+
+  return (
+    <div className="min-h-screen p-4">
+      <div className="max-w-4xl mx-auto space-y-6">
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <Link
+            to="/"
+            className="flex items-center space-x-2 text-muted-foreground hover:text-foreground transition-colors"
+          >
+            <ArrowLeft className="h-5 w-5" />
+            <span>Back</span>
+          </Link>
+          <h1 className="text-2xl font-bold">My Memos</h1>
+          <button
+            onClick={() => setShowFilters(!showFilters)}
+            className={`flex items-center space-x-2 transition-colors ${
+              showFilters || hasFilters
+                ? 'text-primary'
+                : 'text-muted-foreground hover:text-foreground'
+            }`}
+          >
+            <Filter className="h-5 w-5" />
+            {hasFilters && (
+              <span className="h-2 w-2 rounded-full bg-primary absolute top-0 right-0" />
+            )}
+          </button>
+        </div>
+
+        {/* Search Bar */}
+        <div className="relative">
+          <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search memos..."
+            className="w-full pl-12 pr-4 py-3 rounded-lg border border-border bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+          />
+        </div>
+
+        {/* Filters (collapsible) */}
+        {showFilters && (
+          <div className="p-4 rounded-lg border border-border bg-muted/50 space-y-4 animate-in slide-in-from-top">
+            {/* Language Filter */}
+            <div>
+              <label className="text-sm font-semibold mb-2 block">Language</label>
+              <div className="flex gap-2">
+                {['', 'en', 'ko'].map((lang) => (
+                  <button
+                    key={lang}
+                    onClick={() => setSelectedLanguage(lang as any)}
+                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                      selectedLanguage === lang
+                        ? 'bg-primary text-primary-foreground'
+                        : 'bg-background border border-border hover:bg-muted'
+                    }`}
+                  >
+                    {lang === '' ? 'All' : lang === 'en' ? 'English' : '한국어'}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Tags Filter */}
+            <div>
+              <label className="text-sm font-semibold mb-2 block">
+                Filter by Tags {selectedTags.length > 0 && `(${selectedTags.length})`}
+              </label>
+              <div className="flex flex-wrap gap-2">
+                {[...ALL_TAGS.en, ...ALL_TAGS.ko].map((tag) => (
+                  <button
+                    key={tag}
+                    onClick={() => handleTagToggle(tag)}
+                    className={`px-3 py-1 rounded-full text-sm transition-colors ${
+                      selectedTags.includes(tag)
+                        ? 'bg-primary text-primary-foreground'
+                        : 'bg-background border border-border hover:bg-muted'
+                    }`}
+                  >
+                    {tag}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Context Filter */}
+            <div>
+              <label className="text-sm font-semibold mb-2 block">Filter by Context</label>
+              <select
+                value={selectedContext}
+                onChange={(e) => setSelectedContext(e.target.value as any)}
+                className="w-full p-2 rounded-lg border border-border bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+              >
+                <option value="">All Contexts</option>
+                {Object.entries(CONTEXT_TYPES).map(([key, value]) => (
+                  <option key={key} value={key}>
+                    {value.en} / {value.ko}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Clear Filters */}
+            {hasFilters && (
+              <button
+                onClick={clearFilters}
+                className="w-full py-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+              >
+                Clear all filters
+              </button>
+            )}
+          </div>
+        )}
+
+        {/* Loading State */}
+        {isLoading && (
+          <div className="flex flex-col items-center justify-center py-12 space-y-4">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            <p className="text-muted-foreground">Loading memos...</p>
+          </div>
+        )}
+
+        {/* Error State */}
+        {isError && (
+          <div className="p-4 rounded-lg bg-destructive/10 border border-destructive text-destructive">
+            <p className="font-semibold">Error loading memos</p>
+            <p className="text-sm">{error instanceof Error ? error.message : 'Unknown error'}</p>
+          </div>
+        )}
+
+        {/* Memos List */}
+        {!isLoading && !isError && (
+          <div className="space-y-4">
+            {memos.length === 0 ? (
+              <div className="text-center py-12 space-y-4">
+                <p className="text-muted-foreground">
+                  {hasFilters ? 'No memos match your filters' : 'No memos yet'}
+                </p>
+                <Link
+                  to="/"
+                  className="inline-block px-6 py-3 bg-primary text-primary-foreground rounded-lg font-semibold hover:bg-primary/90 transition-colors"
+                >
+                  Create Your First Memo
+                </Link>
+              </div>
+            ) : (
+              <>
+                <p className="text-sm text-muted-foreground">
+                  {memos.length} {memos.length === 1 ? 'memo' : 'memos'} found
+                </p>
+                {memos.map((memo) => (
+                  <div
+                    key={memo.id}
+                    className="p-4 rounded-lg border border-border hover:border-primary transition-colors cursor-pointer group bg-card"
+                  >
+                    <div className="space-y-3">
+                      {/* Summary */}
+                      <p className="font-medium group-hover:text-primary transition-colors line-clamp-2">
+                        {memo.summary}
+                      </p>
+
+                      {/* Tags */}
+                      <div className="flex flex-wrap gap-2">
+                        {memo.tags.map((tag, index) => (
+                          <span
+                            key={index}
+                            className="px-2 py-0.5 rounded-full bg-primary/10 text-primary text-xs font-medium"
+                          >
+                            {tag}
+                          </span>
+                        ))}
+                      </div>
+
+                      {/* Meta Info */}
+                      <div className="flex items-center justify-between text-sm text-muted-foreground">
+                        <div className="flex items-center space-x-3">
+                          <span className="font-medium">
+                            {CONTEXT_TYPES[memo.context as MemoContext]?.[memo.language] ||
+                              memo.context}
+                          </span>
+                          <span className="text-xs">
+                            {memo.language === 'ko' ? '🇰🇷' : '🇺🇸'}
+                          </span>
+                        </div>
+                        <span className="text-xs">{formatDate(memo.created_at)}</span>
+                      </div>
+
+                      {/* Insight (if exists) */}
+                      {memo.insight && (
+                        <div className="pt-2 border-t border-border">
+                          <p className="text-xs text-muted-foreground italic">
+                            💡 {memo.insight}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
