@@ -369,15 +369,20 @@ export function getContextsByLanguage(language: Language) {
 
 // 특정 태그를 다른 언어로 변환
 export function translateTag(tag: string, targetLanguage: Language): string {
+  // Only support en/ko for tags
+  if (targetLanguage !== 'en' && targetLanguage !== 'ko') {
+    return tag;
+  }
+
   for (const category of Object.values(TAG_CATEGORIES)) {
-    const enIndex = category.en.indexOf(tag);
+    const enIndex = (category.en as readonly string[]).indexOf(tag);
     if (enIndex !== -1) {
-      const targetArray = category[targetLanguage] as string[];
+      const targetArray = (category as any)[targetLanguage] as readonly string[];
       return targetArray[enIndex] || tag;
     }
-    const koIndex = category.ko.indexOf(tag);
+    const koIndex = (category.ko as readonly string[]).indexOf(tag);
     if (koIndex !== -1) {
-      const targetArray = category[targetLanguage] as string[];
+      const targetArray = (category as any)[targetLanguage] as readonly string[];
       return targetArray[koIndex] || tag;
     }
   }
@@ -386,12 +391,17 @@ export function translateTag(tag: string, targetLanguage: Language): string {
 
 // 특정 컨텍스트를 다른 언어로 변환
 export function translateContext(context: string, targetLanguage: Language): string {
+  // Only support en/ko for contexts
+  if (targetLanguage !== 'en' && targetLanguage !== 'ko') {
+    return context;
+  }
+
   for (const [key, value] of Object.entries(CONTEXT_TYPES)) {
     if (value.en === context) {
-      return (value as any)[targetLanguage] || context;
+      return value[targetLanguage];
     }
     if (value.ko === context) {
-      return (value as any)[targetLanguage] || context;
+      return value[targetLanguage];
     }
   }
   return context;
