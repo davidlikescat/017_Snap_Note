@@ -30,10 +30,10 @@ export default function Landing() {
               animate={{ opacity: 1, x: 0 }}
               className="flex items-center gap-2"
             >
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-blue-500 flex items-center justify-center">
+              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-pink-400 to-orange-400 flex items-center justify-center">
                 <Zap className="w-5 h-5 text-white" />
               </div>
-              <span className="text-xl font-bold bg-gradient-to-r from-primary to-blue-500 bg-clip-text text-transparent">
+              <span className="text-xl font-bold bg-gradient-to-r from-pink-500 to-orange-500 bg-clip-text text-transparent">
                 Snap Note
               </span>
             </motion.div>
@@ -56,7 +56,7 @@ export default function Landing() {
               </a>
               <Link
                 to="/login"
-                className="px-4 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors text-sm font-medium"
+                className="px-4 py-2 rounded-lg bg-gradient-to-r from-pink-500 to-orange-500 text-white hover:from-pink-600 hover:to-orange-600 transition-colors text-sm font-medium"
               >
                 Get Started
               </Link>
@@ -80,13 +80,13 @@ export default function Landing() {
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 0.1, scale: 1 }}
             transition={{ duration: 2, ease: "easeOut" }}
-            className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary rounded-full blur-3xl"
+            className="absolute top-1/4 left-1/4 w-96 h-96 bg-pink-400 rounded-full blur-3xl"
           />
           <motion.div
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 0.1, scale: 1 }}
             transition={{ duration: 2, delay: 0.5, ease: "easeOut" }}
-            className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-blue-500 rounded-full blur-3xl"
+            className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-orange-400 rounded-full blur-3xl"
           />
         </div>
 
@@ -108,14 +108,14 @@ export default function Landing() {
                   initial={{ opacity: 0, scale: 0.9 }}
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ delay: 0.2 }}
-                  className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20"
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-pink-400/10 border border-pink-400/20"
                 >
-                  <Zap className="w-4 h-4 text-primary" />
-                  <span className="text-sm font-medium text-primary">Lightning-fast note capture</span>
+                  <Zap className="w-4 h-4 text-pink-500" />
+                  <span className="text-sm font-medium text-pink-600">Lightning-fast note capture</span>
                 </motion.div>
 
-                <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold leading-tight">
-                  <span className="bg-gradient-to-r from-primary via-blue-500 to-primary bg-clip-text text-transparent bg-300% animate-gradient">
+                <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold leading-tight whitespace-nowrap">
+                  <span className="bg-gradient-to-r from-pink-500 via-orange-500 to-yellow-500 bg-clip-text text-transparent bg-300% animate-gradient">
                     {HEADLINES[activeHeadline]}
                   </span>
                 </h1>
@@ -137,7 +137,7 @@ export default function Landing() {
                 {/* Primary CTA */}
                 <Link
                   to="/login"
-                  className="group relative inline-flex items-center justify-center gap-2 px-8 py-4 rounded-xl bg-gradient-to-r from-primary to-blue-500 text-white font-semibold text-lg shadow-lg shadow-primary/30 hover:shadow-xl hover:shadow-primary/40 transition-all duration-300 hover:scale-105"
+                  className="group relative inline-flex items-center justify-center gap-2 px-8 py-4 rounded-xl bg-gradient-to-r from-pink-500 to-orange-500 text-white font-semibold text-lg shadow-lg shadow-pink-500/30 hover:shadow-xl hover:shadow-orange-500/40 transition-all duration-300 hover:scale-105"
                 >
                   <Mic className="w-5 h-5" />
                   <span>Start Recording Now</span>
@@ -147,7 +147,7 @@ export default function Landing() {
                 {/* Secondary CTA */}
                 <button
                   onClick={() => setIsVideoPlaying(true)}
-                  className="group inline-flex items-center justify-center gap-2 px-8 py-4 rounded-xl border-2 border-border hover:border-primary bg-background hover:bg-muted transition-all duration-300"
+                  className="group inline-flex items-center justify-center gap-2 px-8 py-4 rounded-xl border-2 border-border hover:border-pink-400 bg-background hover:bg-muted transition-all duration-300"
                 >
                   <Play className="w-5 h-5" />
                   <span className="font-semibold">Watch Demo</span>
@@ -220,7 +220,7 @@ export default function Landing() {
           viewport={{ once: true }}
           className="max-w-4xl mx-auto"
         >
-          <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-primary via-blue-500 to-primary p-12 text-center text-white shadow-2xl">
+          <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-pink-500 via-orange-500 to-yellow-500 p-12 text-center text-white shadow-2xl">
             <div className="absolute inset-0 bg-grid-white/10 [mask-image:radial-gradient(white,transparent_70%)]" />
 
             <div className="relative z-10 space-y-6">
@@ -234,7 +234,7 @@ export default function Landing() {
               <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
                 <Link
                   to="/login"
-                  className="inline-flex items-center justify-center gap-2 px-8 py-4 rounded-xl bg-white text-primary font-semibold text-lg hover:bg-gray-100 transition-all duration-300 hover:scale-105 shadow-xl"
+                  className="inline-flex items-center justify-center gap-2 px-8 py-4 rounded-xl bg-white text-pink-600 font-semibold text-lg hover:bg-gray-100 transition-all duration-300 hover:scale-105 shadow-xl"
                 >
                   <Mic className="w-5 h-5" />
                   <span>Start Free</span>
@@ -255,14 +255,14 @@ export default function Landing() {
         <div className="max-w-7xl mx-auto">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-2">
-              <div className="w-6 h-6 rounded-lg bg-gradient-to-br from-primary to-blue-500 flex items-center justify-center">
+              <div className="w-6 h-6 rounded-lg bg-gradient-to-br from-pink-400 to-orange-400 flex items-center justify-center">
                 <Zap className="w-4 h-4 text-white" />
               </div>
               <span className="font-semibold">Snap Note</span>
             </div>
 
             <p className="text-sm text-muted-foreground">
-              © 2025 Snap Note. Built with Claude Code.
+              © 2025 Snap Note.
             </p>
 
             <div className="flex items-center gap-6">
@@ -350,9 +350,9 @@ function PhoneMockup() {
                     <motion.div
                       animate={{ scale: [1, 1.2, 1] }}
                       transition={{ repeat: Infinity, duration: 2 }}
-                      className="w-16 h-16 rounded-full bg-primary/20 flex items-center justify-center"
+                      className="w-16 h-16 rounded-full bg-pink-400/20 flex items-center justify-center"
                     >
-                      <Mic className="w-8 h-8 text-primary" />
+                      <Mic className="w-8 h-8 text-pink-500" />
                     </motion.div>
                   </div>
                   <p className="text-center text-sm text-muted-foreground">
@@ -365,12 +365,12 @@ function PhoneMockup() {
                 <>
                   <div className="space-y-2">
                     <div className="flex items-center gap-2">
-                      <div className="flex-1 h-2 bg-primary/20 rounded-full overflow-hidden">
+                      <div className="flex-1 h-2 bg-pink-400/20 rounded-full overflow-hidden">
                         <motion.div
                           initial={{ width: 0 }}
                           animate={{ width: '100%' }}
                           transition={{ duration: 2 }}
-                          className="h-full bg-primary"
+                          className="h-full bg-gradient-to-r from-pink-500 to-orange-500"
                         />
                       </div>
                     </div>
@@ -384,7 +384,7 @@ function PhoneMockup() {
                             duration: 1,
                             delay: i * 0.1,
                           }}
-                          className="w-1 bg-primary rounded-full"
+                          className="w-1 bg-pink-500 rounded-full"
                         />
                       ))}
                     </div>
@@ -399,7 +399,7 @@ function PhoneMockup() {
                 <>
                   <div className="space-y-3">
                     <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <Brain className="w-4 h-4 text-primary" />
+                      <Brain className="w-4 h-4 text-pink-500" />
                       <span>AI Organized</span>
                     </div>
                     <div className="p-4 rounded-lg bg-muted space-y-2">
@@ -408,10 +408,10 @@ function PhoneMockup() {
                         App concept for tracking daily habits with gamification
                       </p>
                       <div className="flex flex-wrap gap-1">
-                        <span className="px-2 py-1 rounded-full bg-primary/10 text-primary text-xs">
+                        <span className="px-2 py-1 rounded-full bg-pink-400/10 text-pink-600 text-xs">
                           #app-idea
                         </span>
-                        <span className="px-2 py-1 rounded-full bg-blue-500/10 text-blue-500 text-xs">
+                        <span className="px-2 py-1 rounded-full bg-orange-400/10 text-orange-600 text-xs">
                           #mobile
                         </span>
                       </div>
@@ -449,7 +449,7 @@ function FeatureCard({ feature, index }: { feature: Feature; index: number }) {
       viewport={{ once: true }}
       transition={{ delay: index * 0.1 }}
       whileHover={{ scale: 1.05 }}
-      className="p-6 rounded-2xl bg-card border border-border hover:border-primary/50 transition-all duration-300 shadow-sm hover:shadow-lg"
+      className="p-6 rounded-2xl bg-card border border-border hover:border-pink-400/50 transition-all duration-300 shadow-sm hover:shadow-lg"
     >
       <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${feature.color} flex items-center justify-center mb-4`}>
         <Icon className="w-6 h-6 text-white" />
@@ -483,21 +483,21 @@ function InteractiveDemoSection() {
               onClick={() => setDemoStep(index)}
               animate={{
                 scale: isActive ? 1.05 : 1,
-                borderColor: isActive ? 'rgb(var(--primary))' : 'rgb(var(--border))',
+                borderColor: isActive ? 'rgb(236 72 153)' : 'rgb(var(--border))',
               }}
               className="p-8 rounded-2xl border-2 bg-card text-left transition-all relative overflow-hidden group"
             >
               {isActive && (
                 <motion.div
                   layoutId="activeDemo"
-                  className="absolute inset-0 bg-primary/5"
+                  className="absolute inset-0 bg-pink-500/5"
                   transition={{ type: 'spring', stiffness: 300, damping: 30 }}
                 />
               )}
 
               <div className="relative z-10">
                 <div className={`w-16 h-16 rounded-2xl flex items-center justify-center mb-4 transition-all ${
-                  isActive ? 'bg-primary text-white' : 'bg-muted group-hover:bg-primary/10'
+                  isActive ? 'bg-gradient-to-br from-pink-500 to-orange-500 text-white' : 'bg-muted group-hover:bg-pink-100'
                 }`}>
                   <Icon className="w-8 h-8" />
                 </div>
@@ -528,7 +528,7 @@ function InteractiveDemoSection() {
               transition={{ repeat: Infinity, duration: 2 }}
               className="text-center space-y-4"
             >
-              <Mic className="w-24 h-24 mx-auto text-primary" />
+              <Mic className="w-24 h-24 mx-auto text-pink-500" />
               <p className="text-lg">Tap the microphone and speak naturally</p>
             </motion.div>
           )}
@@ -539,7 +539,7 @@ function InteractiveDemoSection() {
               transition={{ repeat: Infinity, duration: 3, ease: 'linear' }}
               className="text-center space-y-4"
             >
-              <Brain className="w-24 h-24 mx-auto text-primary" />
+              <Brain className="w-24 h-24 mx-auto text-orange-500" />
               <p className="text-lg">AI is processing and organizing...</p>
             </motion.div>
           )}
