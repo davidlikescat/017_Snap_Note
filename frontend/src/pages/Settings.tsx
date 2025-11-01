@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowLeft, Save, Eye, EyeOff, CheckCircle, XCircle, Settings as SettingsIcon, Plug, Search } from 'lucide-react';
+import { ArrowLeft, Save, Eye, EyeOff, CheckCircle, XCircle, Settings as SettingsIcon, Plug, Search, Download, Upload, Trash2, FileText, Database } from 'lucide-react';
 import { toast } from 'sonner';
+import { useMemos, useBulkDeleteMemos } from '@/hooks/useMemo';
 
 interface NotionSettings {
   apiKey: string;
@@ -51,6 +52,14 @@ export default function Settings() {
   const [showApiKey, setShowApiKey] = useState(false);
   const [isTesting, setIsTesting] = useState(false);
   const [testResult, setTestResult] = useState<'success' | 'error' | null>(null);
+
+  // General settings state
+  const [isExporting, setIsExporting] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+
+  // Fetch all memos for export/delete
+  const { data: allMemos = [] } = useMemos({});
+  const bulkDeleteMemos = useBulkDeleteMemos();
 
   // Load settings from localStorage on mount
   useEffect(() => {
@@ -122,6 +131,180 @@ export default function Settings() {
     toast.success('Notion settings have been reset');
   };
 
+  // Export handlers
+  const handleExportJSON = () => {
+    if (allMemos.length === 0) {
+      toast.error('No memos to export');
+      return;
+    }
+
+    setIsExporting(true);
+    try {
+      const exportData = {
+        version: '1.0',
+        exportDate: new Date().toISOString(),
+        memosCount: allMemos.length,
+        memos: allMemos,
+      };
+
+      const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `snap-note-memos-${new Date().toISOString().split('T')[0]}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+      toast.success(`Exported ${allMemos.length} memos as JSON`);
+    } catch (error) {
+      console.error('Export error:', error);
+      toast.error('Failed to export memos');
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
+  const handleExportCSV = () => {
+    if (allMemos.length === 0) {
+      toast.error('No memos to export');
+      return;
+    }
+
+    setIsExporting(true);
+    try {
+      // CSV headers
+      const headers = ['ID', 'Created At', 'Language', 'Context', 'Tags', 'Original Text', 'Refined Text', 'Insight'];
+
+      // CSV rows
+      const rows = allMemos.map(memo => [
+        memo.id,
+        new Date(memo.created_at).toISOString(),
+        memo.language,
+        memo.context,
+        memo.tags.join('; '),
+        `"${memo.original_text.replace(/"/g, '""')}"`,
+        `"${memo.refined.replace(/"/g, '""')}"`,
+        memo.insight ? `"${memo.insight.replace(/"/g, '""')}"` : '',
+      ]);
+
+      const csvContent = [headers, ...rows].map(row => row.join(',')).join('\n');
+
+      const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `snap-note-memos-${new Date().toISOString().split('T')[0]}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+      toast.success(`Exported ${allMemos.length} memos as CSV`);
+    } catch (error) {
+      console.error('Export error:', error);
+      toast.error('Failed to export memos');
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
+  const handleExportMarkdown = () => {
+    if (allMemos.length === 0) {
+      toast.error('No memos to export');
+      return;
+    }
+
+    setIsExporting(true);
+    try {
+      let markdown = `# SNAP NOTE - Exported Memos\n\n`;
+      markdown += `**Export Date:** ${new Date().toLocaleString()}\n`;
+      markdown += `**Total Memos:** ${allMemos.length}\n\n`;
+      markdown += `---\n\n`;
+
+      allMemos.forEach((memo, index) => {
+        markdown += `## Memo ${index + 1}\n\n`;
+        markdown += `- **Date:** ${new Date(memo.created_at).toLocaleString()}\n`;
+        markdown += `- **Language:** ${memo.language.toUpperCase()}\n`;
+        markdown += `- **Context:** ${memo.context}\n`;
+        markdown += `- **Tags:** ${memo.tags.join(', ')}\n\n`;
+        markdown += `### AI Refined\n\n${memo.refined}\n\n`;
+        markdown += `### Original Text\n\n${memo.original_text}\n\n`;
+        if (memo.insight) {
+          markdown += `### Insight\n\n${memo.insight}\n\n`;
+        }
+        markdown += `---\n\n`;
+      });
+
+      const blob = new Blob([markdown], { type: 'text/markdown;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `snap-note-memos-${new Date().toISOString().split('T')[0]}.md`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+      toast.success(`Exported ${allMemos.length} memos as Markdown`);
+    } catch (error) {
+      console.error('Export error:', error);
+      toast.error('Failed to export memos');
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
+  // Import handler
+  const handleImportJSON = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+      try {
+        const content = e.target?.result as string;
+        const data = JSON.parse(content);
+
+        if (!data.memos || !Array.isArray(data.memos)) {
+          toast.error('Invalid JSON format');
+          return;
+        }
+
+        toast.info(`Found ${data.memos.length} memos. Import feature will be available soon.`);
+        // TODO: Implement actual import to Supabase
+      } catch (error) {
+        console.error('Import error:', error);
+        toast.error('Failed to parse JSON file');
+      }
+    };
+    reader.readAsText(file);
+    event.target.value = ''; // Reset input
+  };
+
+  // Delete all data handler
+  const handleDeleteAllData = async () => {
+    if (allMemos.length === 0) {
+      toast.error('No data to delete');
+      return;
+    }
+
+    try {
+      const memoIds = allMemos.map(m => m.id);
+      await bulkDeleteMemos.mutateAsync({
+        ids: memoIds,
+        onProgress: () => {},
+      });
+
+      toast.success(`Deleted all ${allMemos.length} memos`);
+      setShowDeleteConfirm(false);
+    } catch (error) {
+      console.error('Delete error:', error);
+      toast.error('Failed to delete all data');
+    }
+  };
+
   return (
     <div className="min-h-screen flex flex-col md:flex-row">
       {/* Sidebar */}
@@ -177,15 +360,140 @@ export default function Settings() {
           {activeSection === 'general' && (
             <>
               <div>
-                <h2 className="text-2xl font-bold mb-6">General Settings</h2>
+                <h2 className="text-2xl font-bold mb-2">General Settings</h2>
+                <p className="text-muted-foreground">
+                  Manage your workspace data and preferences
+                </p>
               </div>
 
-              <div className="p-12 rounded-lg border border-border bg-card text-center space-y-4">
-                <SettingsIcon className="w-16 h-16 mx-auto text-muted-foreground" />
-                <h3 className="text-xl font-semibold">General Settings</h3>
-                <p className="text-muted-foreground max-w-md mx-auto">
-                  App settings and preferences will be available here.
-                </p>
+              {/* Workspace Content Export */}
+              <div className="space-y-4">
+                <div className="p-6 rounded-lg border border-border bg-card space-y-4">
+                  <div className="flex items-start gap-3">
+                    <Database className="h-6 w-6 text-primary mt-1" />
+                    <div className="flex-1">
+                      <h3 className="text-lg font-semibold mb-1">Workspace Content</h3>
+                      <p className="text-sm text-muted-foreground mb-4">
+                        Export all your memos to various formats. You can use exported data as backup or for data portability.
+                      </p>
+
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between p-3 rounded-lg bg-muted/30">
+                          <div>
+                            <p className="text-sm font-medium">Total Memos</p>
+                            <p className="text-2xl font-bold text-primary">{allMemos.length}</p>
+                          </div>
+                          <FileText className="h-8 w-8 text-muted-foreground" />
+                        </div>
+
+                        <div className="flex flex-wrap gap-2">
+                          <button
+                            onClick={handleExportJSON}
+                            disabled={isExporting || allMemos.length === 0}
+                            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            <Download className="h-4 w-4" />
+                            <span>Export as JSON</span>
+                          </button>
+                          <button
+                            onClick={handleExportCSV}
+                            disabled={isExporting || allMemos.length === 0}
+                            className="flex items-center gap-2 px-4 py-2 rounded-lg border border-border hover:bg-muted transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            <Download className="h-4 w-4" />
+                            <span>Export as CSV</span>
+                          </button>
+                          <button
+                            onClick={handleExportMarkdown}
+                            disabled={isExporting || allMemos.length === 0}
+                            className="flex items-center gap-2 px-4 py-2 rounded-lg border border-border hover:bg-muted transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            <Download className="h-4 w-4" />
+                            <span>Export as Markdown</span>
+                          </button>
+                        </div>
+
+                        <div className="pt-2 text-xs text-muted-foreground">
+                          💡 Exported files include all memo data: original text, AI refined text, tags, context, language, and timestamps.
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Import Data */}
+                <div className="p-6 rounded-lg border border-border bg-card space-y-4">
+                  <div className="flex items-start gap-3">
+                    <Upload className="h-6 w-6 text-blue-500 mt-1" />
+                    <div className="flex-1">
+                      <h3 className="text-lg font-semibold mb-1">Import Data</h3>
+                      <p className="text-sm text-muted-foreground mb-4">
+                        Import previously exported memos from JSON file.
+                      </p>
+
+                      <div className="space-y-3">
+                        <label className="flex items-center gap-2 px-4 py-2 rounded-lg border border-border hover:bg-muted transition-colors cursor-pointer w-fit">
+                          <Upload className="h-4 w-4" />
+                          <span>Choose JSON File</span>
+                          <input
+                            type="file"
+                            accept=".json"
+                            onChange={handleImportJSON}
+                            className="hidden"
+                          />
+                        </label>
+
+                        <div className="text-xs text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/20 p-3 rounded-lg">
+                          ⚠️ Import feature is coming soon. Currently you can only validate your exported JSON files.
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Delete All Data */}
+                <div className="p-6 rounded-lg border border-destructive/50 bg-destructive/5 space-y-4">
+                  <div className="flex items-start gap-3">
+                    <Trash2 className="h-6 w-6 text-destructive mt-1" />
+                    <div className="flex-1">
+                      <h3 className="text-lg font-semibold mb-1 text-destructive">Danger Zone</h3>
+                      <p className="text-sm text-muted-foreground mb-4">
+                        Permanently delete all memos from your workspace. This action cannot be undone.
+                      </p>
+
+                      {!showDeleteConfirm ? (
+                        <button
+                          onClick={() => setShowDeleteConfirm(true)}
+                          disabled={allMemos.length === 0}
+                          className="flex items-center gap-2 px-4 py-2 rounded-lg border border-destructive text-destructive hover:bg-destructive hover:text-destructive-foreground transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                          <span>Delete All Data</span>
+                        </button>
+                      ) : (
+                        <div className="space-y-3 p-4 rounded-lg bg-background border border-destructive">
+                          <p className="text-sm font-semibold text-destructive">
+                            ⚠️ Are you sure? This will permanently delete all {allMemos.length} memos!
+                          </p>
+                          <div className="flex gap-2">
+                            <button
+                              onClick={handleDeleteAllData}
+                              className="px-4 py-2 rounded-lg bg-destructive text-destructive-foreground hover:bg-destructive/90 transition-colors"
+                            >
+                              Yes, Delete Everything
+                            </button>
+                            <button
+                              onClick={() => setShowDeleteConfirm(false)}
+                              className="px-4 py-2 rounded-lg border border-border hover:bg-muted transition-colors"
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
               </div>
             </>
           )}
