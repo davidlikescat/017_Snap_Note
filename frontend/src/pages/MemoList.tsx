@@ -1,9 +1,9 @@
 import { useState, useMemo as useReactMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Search, Filter, Loader2, CheckSquare, Square, Trash2, FolderInput, Share2, FileText, Plus, Mic, Edit3 } from 'lucide-react';
+import { ArrowLeft, Search, Filter, Loader2, CheckSquare, Square, Trash2, FolderInput, Share2, FileText, Plus, Mic, Edit3, X, Pencil } from 'lucide-react';
 import { useMemos, useBulkDeleteMemos, useBulkUpdateContext, useUpdateMemo } from '@/hooks/useMemo';
 import { formatDate } from '@/lib/utils';
-import { getTagsForLanguage, CONTEXT_TYPES } from '@/lib/constants';
+import { getTagsForLanguage, addCustomTag, removeCustomTag, CONTEXT_TYPES } from '@/lib/constants';
 import { MemoContext } from '@/types/memo';
 import { useLanguageStore } from '@/stores/useLanguageStore';
 import { toast } from 'sonner';
@@ -58,6 +58,12 @@ export default function MemoList() {
   // Editing state
   const [editingMemoId, setEditingMemoId] = useState<string | null>(null);
   const [editingText, setEditingText] = useState('');
+
+  // Tag management state
+  const [editingTag, setEditingTag] = useState<string | null>(null);
+  const [editingTagValue, setEditingTagValue] = useState('');
+  const [newTagValue, setNewTagValue] = useState('');
+  const [showAddTag, setShowAddTag] = useState(false);
 
   // Fetch filter params
   const filters = useReactMemo(() => {
@@ -284,6 +290,70 @@ export default function MemoList() {
     }
   };
 
+  // Tag management handlers
+  const handleAddNewTag = () => {
+    const trimmed = newTagValue.trim();
+    if (!trimmed) {
+      toast.error('Please enter a tag name');
+      return;
+    }
+
+    const formatted = trimmed.startsWith('#') ? trimmed : `#${trimmed}`;
+
+    // Check if tag already exists
+    const existingTags = getTagsForLanguage(globalLanguage);
+    if (existingTags.includes(formatted)) {
+      toast.error('Tag already exists');
+      return;
+    }
+
+    addCustomTag(globalLanguage, formatted);
+    setNewTagValue('');
+    setShowAddTag(false);
+    toast.success(`Tag "${formatted}" added`);
+
+    // Reload page to show new tag
+    window.location.reload();
+  };
+
+  const handleStartEditTag = (tag: string) => {
+    setEditingTag(tag);
+    setEditingTagValue(tag.startsWith('#') ? tag.slice(1) : tag);
+  };
+
+  const handleSaveEditTag = () => {
+    const trimmed = editingTagValue.trim();
+    if (!trimmed || !editingTag) return;
+
+    const formatted = trimmed.startsWith('#') ? trimmed : `#${trimmed}`;
+
+    if (formatted === editingTag) {
+      setEditingTag(null);
+      return;
+    }
+
+    // Remove old tag and add new tag
+    removeCustomTag(globalLanguage, editingTag);
+    addCustomTag(globalLanguage, formatted);
+
+    setEditingTag(null);
+    setEditingTagValue('');
+    toast.success(`Tag updated to "${formatted}"`);
+
+    // Reload page
+    window.location.reload();
+  };
+
+  const handleDeleteTag = (tag: string) => {
+    if (confirm(`Delete tag "${tag}"?`)) {
+      removeCustomTag(globalLanguage, tag);
+      toast.success(`Tag "${tag}" deleted`);
+
+      // Reload page
+      window.location.reload();
+    }
+  };
+
   const clearFilters = () => {
     setSelectedTags([]);
     setSelectedContext('');
@@ -412,22 +482,108 @@ export default function MemoList() {
 
             {/* Tags Filter */}
             <div>
-              <label className="text-sm font-semibold mb-2 block">
-                Filter by Tags {selectedTags.length > 0 && `(${selectedTags.length})`}
-              </label>
+              <div className="flex items-center justify-between mb-2">
+                <label className="text-sm font-semibold">
+                  Filter by Tags {selectedTags.length > 0 && `(${selectedTags.length})`}
+                </label>
+                <button
+                  onClick={() => setShowAddTag(!showAddTag)}
+                  className="flex items-center gap-1 text-xs text-primary hover:text-primary/80 transition-colors"
+                >
+                  <Plus className="h-3 w-3" />
+                  <span>Add Tag</span>
+                </button>
+              </div>
+
+              {/* Add New Tag Input */}
+              {showAddTag && (
+                <div className="mb-3 flex gap-2">
+                  <input
+                    type="text"
+                    value={newTagValue}
+                    onChange={(e) => setNewTagValue(e.target.value)}
+                    onKeyPress={(e) => e.key === 'Enter' && handleAddNewTag()}
+                    placeholder="New tag name..."
+                    className="flex-1 px-3 py-1.5 text-sm rounded-lg border border-border bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                    autoFocus
+                  />
+                  <button
+                    onClick={handleAddNewTag}
+                    className="px-3 py-1.5 text-sm rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+                  >
+                    Add
+                  </button>
+                  <button
+                    onClick={() => {
+                      setShowAddTag(false);
+                      setNewTagValue('');
+                    }}
+                    className="px-3 py-1.5 text-sm rounded-lg border border-border hover:bg-muted transition-colors"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              )}
+
               <div className="flex flex-wrap gap-2">
                 {getTagsForLanguage(globalLanguage).map((tag) => (
-                  <button
+                  <div
                     key={tag}
-                    onClick={() => handleTagToggle(tag)}
-                    className={`px-3 py-1 rounded-full text-sm transition-colors ${
-                      selectedTags.includes(tag)
-                        ? 'bg-primary text-primary-foreground'
-                        : 'bg-background border border-border hover:bg-muted'
-                    }`}
+                    className="group relative"
                   >
-                    {tag}
-                  </button>
+                    {editingTag === tag ? (
+                      // Edit mode
+                      <div className="flex items-center gap-1">
+                        <input
+                          type="text"
+                          value={editingTagValue}
+                          onChange={(e) => setEditingTagValue(e.target.value)}
+                          onKeyPress={(e) => {
+                            if (e.key === 'Enter') handleSaveEditTag();
+                            if (e.key === 'Escape') setEditingTag(null);
+                          }}
+                          onBlur={handleSaveEditTag}
+                          className="px-3 py-1 text-sm rounded-full border border-primary bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                          style={{ width: `${Math.max(editingTagValue.length * 8 + 20, 60)}px` }}
+                          autoFocus
+                        />
+                      </div>
+                    ) : (
+                      // View mode
+                      <div className="flex items-center gap-1 px-3 py-1 rounded-full text-sm transition-colors bg-background border border-border hover:bg-muted">
+                        <button
+                          onClick={() => handleTagToggle(tag)}
+                          className={`${
+                            selectedTags.includes(tag) ? 'font-semibold text-primary' : ''
+                          }`}
+                        >
+                          {tag}
+                        </button>
+                        <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleStartEditTag(tag);
+                            }}
+                            className="p-0.5 hover:bg-muted-foreground/10 rounded"
+                            title="Edit tag"
+                          >
+                            <Pencil className="h-3 w-3" />
+                          </button>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDeleteTag(tag);
+                            }}
+                            className="p-0.5 hover:bg-destructive/10 hover:text-destructive rounded"
+                            title="Delete tag"
+                          >
+                            <X className="h-3 w-3" />
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 ))}
               </div>
             </div>
