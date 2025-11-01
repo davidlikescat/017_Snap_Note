@@ -67,7 +67,7 @@ export const ALL_TAGS = {
 
 export const APP_CONFIG = {
   MAX_AUDIO_DURATION: Number((import.meta as any).env?.VITE_MAX_AUDIO_DURATION) || 300000, // 5 minutes
-  MAX_TEXT_LENGTH: Number((import.meta as any).env?.VITE_MAX_TEXT_LENGTH) || 500,
+  MAX_TEXT_LENGTH: Number((import.meta as any).env?.VITE_MAX_TEXT_LENGTH) || 1000, // Default 1000 characters
   MAX_TAGS: 3,
   MIN_TAGS: 1,
   SUPPORTED_LANGUAGES: ['en', 'ko'] as const
