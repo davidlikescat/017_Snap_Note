@@ -8,7 +8,7 @@ import { useRefine } from '@/hooks/useRefine';
 import { useCreateMemo } from '@/hooks/useMemo';
 import { formatDuration } from '@/lib/utils';
 import { MemoContext } from '@/types/memo';
-import type { AppLanguage } from '@/stores/useLanguageStore';
+import { useLanguageStore, type AppLanguage } from '@/stores/useLanguageStore';
 
 const LANGUAGE_LABELS: Record<AppLanguage, string> = {
   en: 'English',
@@ -24,6 +24,9 @@ export default function Record() {
   const [isSaving, setIsSaving] = useState(false);
   const [showLanguageMenu, setShowLanguageMenu] = useState(false);
 
+  // Global language store
+  const { language: globalLanguage } = useLanguageStore();
+
   // Recording hook
   const [recorderState, recorderControls] = useRecorder();
   const { isRecording, isPaused, duration, error: recorderError } = recorderState;
@@ -33,6 +36,11 @@ export default function Record() {
   const [transcribeState, transcribeControls] = useTranscribe();
   const { transcript, interimTranscript, error: transcribeError, language } = transcribeState;
   const { startListening, stopListening, setLanguage } = transcribeControls;
+
+  // Sync language from global store on mount
+  useEffect(() => {
+    setLanguage(globalLanguage);
+  }, [globalLanguage, setLanguage]);
 
   // Refinement hook
   const [refineState, refineControls] = useRefine();
