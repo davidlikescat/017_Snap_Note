@@ -275,10 +275,16 @@ export default async function handler(
 
     // Detect language (한국어인지만 확인, 나머지는 영어 프롬프트 사용)
     const language = detectLanguage(text);
+    console.log("[REFINE] Detected language:", language);
+    console.log("[REFINE] Text length:", text.length);
 
     // Initialize Groq LLM with LangChain
     const groqApiKey = process.env.GROQ_API_KEY;
+    console.log("[REFINE] GROQ_API_KEY exists:", !!groqApiKey);
+    console.log("[REFINE] GROQ_API_KEY length:", groqApiKey?.length || 0);
+
     if (!groqApiKey) {
+      console.error("[REFINE] GROQ_API_KEY not configured!");
       throw new Error("GROQ_API_KEY not configured");
     }
 
@@ -288,6 +294,7 @@ export default async function handler(
       temperature: 0.3, // Lower temperature for more consistent JSON output
       maxTokens: 1024,
     });
+    console.log("[REFINE] ChatGroq initialized successfully");
 
     // Construct prompt
     const systemPrompt = SYSTEM_PROMPTS[language];
@@ -321,11 +328,18 @@ export default async function handler(
         });
       } catch (error) {
         attempts++;
-        console.error(`Attempt ${attempts} failed:`, error);
+        console.error(`[REFINE] Attempt ${attempts}/${maxAttempts} failed:`, error);
+        console.error(`[REFINE] Error type:`, error instanceof Error ? error.constructor.name : typeof error);
+        console.error(`[REFINE] Error message:`, error instanceof Error ? error.message : String(error));
+        if (error instanceof Error && error.stack) {
+          console.error(`[REFINE] Stack trace:`, error.stack.split('\n').slice(0, 3).join('\n'));
+        }
 
         if (attempts >= maxAttempts) {
           // All attempts failed - return fallback
-          console.error("All refinement attempts failed, using fallback");
+          console.error("[REFINE] All refinement attempts failed, using fallback");
+          console.error("[REFINE] GROQ_API_KEY exists:", !!process.env.GROQ_API_KEY);
+          console.error("[REFINE] GROQ_API_KEY length:", process.env.GROQ_API_KEY?.length || 0);
 
           const fallbackTags =
             language === "ko"
