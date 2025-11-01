@@ -1,10 +1,5 @@
 {
-  "installCommand": "npm --prefix ./api install && npm --prefix ./frontend install",
-  "buildCommand": "npm --prefix ./frontend run build",
-  "outputDirectory": "frontend/dist",
-  "functions": {
-    "api/**/*.ts": {
-      "runtime": "nodejs20.x"
-    }
-  }
+  "installCommand": "npm install --prefix api && npm install --prefix frontend",
+  "buildCommand": "npm run build --prefix frontend",
+  "outputDirectory": "frontend/dist"
 }
