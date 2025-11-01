@@ -537,7 +537,7 @@ export default function MemoList() {
                     const baseTagOptions = memo.language === 'ko' ? ALL_TAGS.ko : ALL_TAGS.en;
                     const editingPool = editingMemoId === memo.id ? editingTags : memo.tags;
                     const availableTagOptions = Array.from(
-                      new Set([...baseTagOptions, ...memo.tags, ...editingPool])
+                      new Set<string>([...baseTagOptions, ...memo.tags, ...editingPool])
                     );
 
                     return (
