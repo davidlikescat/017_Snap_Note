@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
-import { ArrowLeft, Save, Edit2, Plus, X, CheckCircle2 } from 'lucide-react';
+import { ArrowLeft, Save, Edit2, Plus, X, CheckCircle2, List } from 'lucide-react';
 import { toast } from 'sonner';
 import { useCreateMemo } from '@/hooks/useMemo';
 import { useRefine } from '@/hooks/useRefine';
@@ -532,12 +532,14 @@ export default function Result() {
         {!isRefining && (
           <div className="flex space-x-4">
             <button
-              onClick={handleSave}
+              onClick={autoSaveState === 'saved' ? () => navigate('/memos') : handleSave}
               disabled={
-                isSaving ||
-                autoSaveState === 'saving' ||
-                refined.trim().length === 0 ||
-                tags.length === 0
+                autoSaveState === 'saved' ? false : (
+                  isSaving ||
+                  autoSaveState === 'saving' ||
+                  refined.trim().length === 0 ||
+                  tags.length === 0
+                )
               }
               className="flex-1 flex items-center justify-center space-x-2 bg-primary text-primary-foreground py-4 rounded-lg font-semibold disabled:opacity-50 disabled:cursor-not-allowed hover:bg-primary/90 transition-colors"
             >
@@ -548,8 +550,8 @@ export default function Result() {
                 </>
               ) : autoSaveState === 'saved' ? (
                 <>
-                  <CheckCircle2 className="h-5 w-5" />
-                  <span>Saved</span>
+                  <List className="h-5 w-5" />
+                  <span>View Memo List</span>
                 </>
               ) : (
                 <>
