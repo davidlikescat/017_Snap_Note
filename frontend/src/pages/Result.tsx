@@ -141,7 +141,7 @@ export default function Result() {
     insight,
     originalText,
     language,
-    isRefining,
+    refineState,
     autoSaveState,
     createMemoAsync,
   ]);
@@ -250,7 +250,7 @@ export default function Result() {
   };
 
   const availableTags = language === 'ko' ? ALL_TAGS.ko : ALL_TAGS.en;
-  const isRefining = refineState.isRefining;
+  const isRefining = refineState?.isRefining || false;
 
   return (
     <div className="min-h-screen p-4">

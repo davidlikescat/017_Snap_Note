@@ -26,16 +26,13 @@ export default function Record() {
 
   // Recording hook
   const [recorderState, recorderControls] = useRecorder();
-  const { isRecording, isPaused, duration, audioBlob, error: recorderError } = recorderState;
+  const { isRecording, isPaused, duration, error: recorderError } = recorderState;
   const { startRecording, stopRecording, pauseRecording, resumeRecording } = recorderControls;
 
   // Transcription hook
   const [transcribeState, transcribeControls] = useTranscribe();
   const { transcript, interimTranscript, error: transcribeError, language } = transcribeState;
   const { startListening, stopListening, setLanguage } = transcribeControls;
-
-  // Refinement and memo creation hooks
-  const [refineState, refineControls] = useRefine();
   const createMemo = useCreateMemo();
 
   // Handle recording errors
