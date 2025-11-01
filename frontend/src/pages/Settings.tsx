@@ -78,7 +78,7 @@ export default function Settings() {
   };
 
   const handleClear = () => {
-    setNotionSettings({ apiKey: '', databaseId: '' });
+    setNotionSettings({ apiKey: '', databaseId: '', autoSync: false });
     localStorage.removeItem('notionSettings');
     setTestResult(null);
     toast.success('Notion settings have been reset');

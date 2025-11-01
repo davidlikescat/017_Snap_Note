@@ -372,11 +372,13 @@ export function translateTag(tag: string, targetLanguage: Language): string {
   for (const category of Object.values(TAG_CATEGORIES)) {
     const enIndex = category.en.indexOf(tag);
     if (enIndex !== -1) {
-      return category[targetLanguage][enIndex];
+      const targetArray = category[targetLanguage] as string[];
+      return targetArray[enIndex] || tag;
     }
     const koIndex = category.ko.indexOf(tag);
     if (koIndex !== -1) {
-      return category[targetLanguage][koIndex];
+      const targetArray = category[targetLanguage] as string[];
+      return targetArray[koIndex] || tag;
     }
   }
   return tag;
@@ -386,10 +388,10 @@ export function translateTag(tag: string, targetLanguage: Language): string {
 export function translateContext(context: string, targetLanguage: Language): string {
   for (const [key, value] of Object.entries(CONTEXT_TYPES)) {
     if (value.en === context) {
-      return value[targetLanguage];
+      return (value as any)[targetLanguage] || context;
     }
     if (value.ko === context) {
-      return value[targetLanguage];
+      return (value as any)[targetLanguage] || context;
     }
   }
   return context;

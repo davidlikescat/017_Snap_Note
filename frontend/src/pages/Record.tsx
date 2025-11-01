@@ -33,6 +33,10 @@ export default function Record() {
   const [transcribeState, transcribeControls] = useTranscribe();
   const { transcript, interimTranscript, error: transcribeError, language } = transcribeState;
   const { startListening, stopListening, setLanguage } = transcribeControls;
+
+  // Refinement hook
+  const [refineState, refineControls] = useRefine();
+
   const createMemo = useCreateMemo();
 
   // Handle recording errors
