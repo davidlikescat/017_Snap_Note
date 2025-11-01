@@ -151,13 +151,17 @@ export default function MemoList() {
     const confirmMessage = `Delete ${selectedMemos.length} memo(s)?`;
     if (!confirm(confirmMessage)) return;
 
+    console.log('🗑️ [DEBUG] Starting bulk delete for IDs:', selectedMemos);
+
     try {
       await bulkDeleteMemos.mutateAsync(selectedMemos);
+      console.log('✅ [DEBUG] Bulk delete successful');
       toast.success(`Deleted ${selectedMemos.length} memo(s)`);
       setSelectedMemos([]);
     } catch (error) {
-      toast.error('Failed to delete memos');
-      console.error('Delete error:', error);
+      console.error('❌ [DEBUG] Delete error:', error);
+      console.error('Error details:', JSON.stringify(error, null, 2));
+      toast.error(`Failed to delete memos: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   };
 
