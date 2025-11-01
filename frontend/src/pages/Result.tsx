@@ -87,7 +87,7 @@ export default function Result() {
     } else {
       // No data - redirect to home
       toast.error('No data to display');
-      navigate('/');
+      navigate('/app');
     }
   }, [location.state]);
 
@@ -202,7 +202,7 @@ export default function Result() {
       });
       setAutoSaveState('saved');
       toast.success('Memo saved successfully!');
-      navigate('/memos');
+      navigate('/app/memos');
     } catch (error) {
       console.error('Save error:', error);
       setAutoSaveState('error');
@@ -268,7 +268,7 @@ export default function Result() {
         {/* Header */}
         <div className="flex items-center justify-between">
           <Link
-            to="/"
+            to="/app"
             className="flex items-center space-x-2 text-muted-foreground hover:text-foreground transition-colors"
           >
             <ArrowLeft className="h-5 w-5" />
@@ -539,7 +539,7 @@ export default function Result() {
         {!isRefining && (
           <div className="flex space-x-4">
             <button
-              onClick={autoSaveState === 'saved' ? () => navigate('/memos') : handleSave}
+              onClick={autoSaveState === 'saved' ? () => navigate('/app/memos') : handleSave}
               disabled={
                 autoSaveState === 'saved' ? false : (
                   isSaving ||
@@ -568,7 +568,7 @@ export default function Result() {
               )}
             </button>
             <Link
-              to="/"
+              to="/app"
               className="flex items-center justify-center px-6 py-4 rounded-lg border border-border hover:bg-muted transition-colors"
             >
               Cancel

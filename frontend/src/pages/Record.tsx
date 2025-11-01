@@ -105,7 +105,7 @@ export default function Record() {
         toast.success('Memo saved successfully!');
 
         // Step 3: Navigate to memos list
-        navigate('/memos');
+        navigate('/app/memos');
       } catch (error) {
         console.error('❌ [DEBUG] Save failed:', error);
         toast.error('Failed to save memo. Please try again.');
@@ -148,7 +148,7 @@ export default function Record() {
         {/* Header */}
         <div className="flex items-center justify-between">
           <Link
-            to="/"
+            to="/app"
             className="flex items-center space-x-2 text-muted-foreground hover:text-foreground transition-colors"
           >
             <ArrowLeft className="h-5 w-5" />

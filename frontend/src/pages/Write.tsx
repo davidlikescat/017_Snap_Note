@@ -93,7 +93,7 @@ export default function Write() {
       <div className="max-w-2xl mx-auto space-y-8">
         {/* Header */}
         <div className="flex items-center justify-between">
-          <Link to="/" className="flex items-center space-x-2 text-muted-foreground hover:text-foreground">
+          <Link to="/app" className="flex items-center space-x-2 text-muted-foreground hover:text-foreground">
             <ArrowLeft className="h-5 w-5" />
             <span>{getText('back', language)}</span>
           </Link>

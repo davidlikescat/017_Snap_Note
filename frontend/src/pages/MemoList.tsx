@@ -373,7 +373,7 @@ export default function MemoList() {
         {/* Header */}
         <div className="flex items-center justify-between">
           <Link
-            to="/"
+            to="/app"
             className="flex items-center space-x-2 text-muted-foreground hover:text-foreground transition-colors"
           >
             <ArrowLeft className="h-5 w-5" />
@@ -427,7 +427,7 @@ export default function MemoList() {
                 <div className="absolute top-full mt-2 right-0 w-56 bg-background border border-border rounded-lg shadow-lg z-20 overflow-hidden">
                   <button
                     onClick={() => {
-                      navigate('/record');
+                      navigate('/app/record');
                       setShowCreateMenu(false);
                     }}
                     className="w-full px-4 py-3 text-left hover:bg-muted transition-colors flex items-center gap-3"
@@ -440,7 +440,7 @@ export default function MemoList() {
                   </button>
                   <button
                     onClick={() => {
-                      navigate('/write');
+                      navigate('/app/write');
                       setShowCreateMenu(false);
                     }}
                     className="w-full px-4 py-3 text-left hover:bg-muted transition-colors flex items-center gap-3 border-t border-border"
@@ -642,7 +642,7 @@ export default function MemoList() {
                   {hasFilters ? 'No memos match your filters' : 'No memos yet'}
                 </p>
                 <Link
-                  to="/"
+                  to="/app"
                   className="inline-block px-6 py-3 bg-primary text-primary-foreground rounded-lg font-semibold hover:bg-primary/90 transition-colors"
                 >
                   Create Your First Memo

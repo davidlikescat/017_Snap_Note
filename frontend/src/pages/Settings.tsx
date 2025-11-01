@@ -312,7 +312,7 @@ export default function Settings() {
         {/* Header */}
         <div className="space-y-4">
           <Link
-            to="/"
+            to="/app"
             className="flex items-center space-x-2 text-muted-foreground hover:text-foreground transition-colors"
           >
             <ArrowLeft className="h-5 w-5" />

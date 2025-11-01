@@ -104,7 +104,7 @@ export default function Home() {
                   <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
                 </div>
                 <Link
-                  to="/settings"
+                  to="/app/settings"
                   onClick={() => setShowUserMenu(false)}
                   className="w-full px-4 py-3 text-left text-sm hover:bg-muted transition-colors flex items-center gap-2"
                 >
@@ -139,7 +139,7 @@ export default function Home() {
         {/* Action Buttons */}
         <div className="grid grid-cols-1 gap-4 pt-8">
           <Link
-            to="/record"
+            to="/app/record"
             className="group relative overflow-hidden rounded-lg bg-primary p-8 text-primary-foreground transition-all hover:scale-105 hover:shadow-lg"
           >
             <div className="flex flex-col items-center space-y-3">
@@ -150,7 +150,7 @@ export default function Home() {
           </Link>
 
           <Link
-            to="/write"
+            to="/app/write"
             className="group relative overflow-hidden rounded-lg bg-secondary p-8 text-secondary-foreground transition-all hover:scale-105 hover:shadow-lg"
           >
             <div className="flex flex-col items-center space-y-3">
@@ -161,7 +161,7 @@ export default function Home() {
           </Link>
 
           <Link
-            to="/memos"
+            to="/app/memos"
             className="group relative overflow-hidden rounded-lg border-2 border-border p-6 transition-all hover:scale-105 hover:border-primary"
           >
             <div className="flex items-center justify-center space-x-3">

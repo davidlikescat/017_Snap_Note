@@ -29,12 +29,12 @@ function App() {
           <div className="min-h-screen bg-background">
             <Routes>
               {/* Public routes */}
-              <Route path="/landing" element={<Landing />} />
+              <Route path="/" element={<Landing />} />
               <Route path="/login" element={<Login />} />
 
-              {/* Protected routes */}
+              {/* Protected routes - App */}
               <Route
-                path="/"
+                path="/app"
                 element={
                   <ProtectedRoute>
                     <Home />
@@ -42,7 +42,7 @@ function App() {
                 }
               />
               <Route
-                path="/record"
+                path="/app/record"
                 element={
                   <ProtectedRoute>
                     <Record />
@@ -50,7 +50,7 @@ function App() {
                 }
               />
               <Route
-                path="/write"
+                path="/app/write"
                 element={
                   <ProtectedRoute>
                     <Write />
@@ -58,7 +58,7 @@ function App() {
                 }
               />
               <Route
-                path="/result"
+                path="/app/result"
                 element={
                   <ProtectedRoute>
                     <Result />
@@ -66,7 +66,7 @@ function App() {
                 }
               />
               <Route
-                path="/memos"
+                path="/app/memos"
                 element={
                   <ProtectedRoute>
                     <MemoList />
@@ -74,7 +74,7 @@ function App() {
                 }
               />
               <Route
-                path="/settings"
+                path="/app/settings"
                 element={
                   <ProtectedRoute>
                     <Settings />
