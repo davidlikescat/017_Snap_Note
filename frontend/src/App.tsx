@@ -3,6 +3,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from 'sonner';
 import { AuthProvider } from '@/contexts/AuthContext';
 import ProtectedRoute from '@/components/ProtectedRoute';
+import Landing from '@/pages/Landing';
 import Login from '@/pages/Login';
 import Home from '@/pages/Home';
 import Record from '@/pages/Record';
@@ -27,7 +28,8 @@ function App() {
         <Router>
           <div className="min-h-screen bg-background">
             <Routes>
-              {/* Public route */}
+              {/* Public routes */}
+              <Route path="/landing" element={<Landing />} />
               <Route path="/login" element={<Login />} />
 
               {/* Protected routes */}
