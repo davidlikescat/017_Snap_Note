@@ -90,7 +90,8 @@ export default async function handler(
               database_id: databaseId,
             },
             properties: {
-              Name: {
+              // Use default "title" property (Notion's default title field)
+              title: {
                 title: [
                   {
                     text: {
@@ -99,21 +100,33 @@ export default async function handler(
                   },
                 ],
               },
-              Tags: {
-                multi_select: memo.tags.map((tag: string) => ({ name: tag })),
-              },
-              Context: {
+              // Set Status to "To Do" (matching your database)
+              Status: {
                 select: {
-                  name: memo.context,
-                },
-              },
-              Language: {
-                select: {
-                  name: LANGUAGE_LABELS[memo.language] || 'English',
+                  name: 'To Do',
                 },
               },
             },
             children: [
+              // Metadata (Tags, Context, Language)
+              {
+                object: 'block',
+                type: 'callout',
+                callout: {
+                  rich_text: [
+                    {
+                      type: 'text',
+                      text: {
+                        content: `📌 Tags: ${memo.tags.join(', ')}\n🗂️ Context: ${memo.context}\n🌐 Language: ${LANGUAGE_LABELS[memo.language] || 'English'}`,
+                      },
+                    },
+                  ],
+                  icon: {
+                    emoji: '📋',
+                  },
+                  color: 'gray_background',
+                },
+              },
               // Summary heading
               {
                 object: 'block',
