@@ -25,22 +25,17 @@ export default function Record() {
   const [showLanguageMenu, setShowLanguageMenu] = useState(false);
 
   // Global language store
-  const { language: globalLanguage } = useLanguageStore();
+  const { language: globalLanguage, setLanguage: setGlobalLanguage } = useLanguageStore();
 
   // Recording hook
   const [recorderState, recorderControls] = useRecorder();
   const { isRecording, isPaused, duration, error: recorderError } = recorderState;
   const { startRecording, stopRecording, pauseRecording, resumeRecording } = recorderControls;
 
-  // Transcription hook
-  const [transcribeState, transcribeControls] = useTranscribe();
+  // Transcription hook - initialized with global language
+  const [transcribeState, transcribeControls] = useTranscribe(globalLanguage);
   const { transcript, interimTranscript, error: transcribeError, language } = transcribeState;
-  const { startListening, stopListening, setLanguage } = transcribeControls;
-
-  // Sync language from global store on mount
-  useEffect(() => {
-    setLanguage(globalLanguage);
-  }, [globalLanguage, setLanguage]);
+  const { startListening, stopListening, setLanguage: setTranscribeLanguage } = transcribeControls;
 
   // Refinement hook
   const [refineState, refineControls] = useRefine();
@@ -131,7 +126,8 @@ export default function Record() {
   };
 
   const handleLanguageChange = (newLang: AppLanguage) => {
-    setLanguage(newLang);
+    setTranscribeLanguage(newLang);
+    setGlobalLanguage(newLang);  // Update global language store
     setShowLanguageMenu(false);
     toast.success(`Language changed to ${LANGUAGE_LABELS[newLang]}`);
 
