@@ -52,21 +52,27 @@ export default function Settings() {
     setTestResult(null);
 
     try {
-      const response = await fetch(`https://api.notion.com/v1/databases/${notionSettings.databaseId}`, {
-        method: 'GET',
+      // Use backend API to avoid CORS issues
+      const response = await fetch('/api/notion-test', {
+        method: 'POST',
         headers: {
-          'Authorization': `Bearer ${notionSettings.apiKey}`,
-          'Notion-Version': '2022-06-28',
+          'Content-Type': 'application/json',
         },
+        body: JSON.stringify({
+          apiKey: notionSettings.apiKey,
+          databaseId: notionSettings.databaseId,
+        }),
       });
 
-      if (response.ok) {
+      const data = await response.json();
+
+      if (data.success) {
         setTestResult('success');
-        toast.success('Connection successful! Connected to Notion');
+        toast.success(`Connection successful! Connected to: ${data.database.title}`);
       } else {
-        const error = await response.json();
         setTestResult('error');
-        toast.error(`Connection failed: ${error.message || 'Please check permissions'}`);
+        toast.error(`Connection failed: ${data.error || 'Please check permissions'}`);
+        console.error('Notion test error:', data);
       }
     } catch (error) {
       setTestResult('error');

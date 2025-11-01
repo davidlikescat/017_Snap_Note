@@ -1,6 +1,6 @@
 import { useState, useMemo as useReactMemo } from 'react';
-import { Link } from 'react-router-dom';
-import { ArrowLeft, Search, Filter, Loader2, CheckSquare, Square, Trash2, FolderInput, Share2, FileText } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { ArrowLeft, Search, Filter, Loader2, CheckSquare, Square, Trash2, FolderInput, Share2, FileText, Plus, Mic, Edit3 } from 'lucide-react';
 import { useMemos, useBulkDeleteMemos, useBulkUpdateContext, useUpdateMemo } from '@/hooks/useMemo';
 import { formatDate } from '@/lib/utils';
 import { ALL_TAGS, CONTEXT_TYPES } from '@/lib/constants';
@@ -38,6 +38,7 @@ const MEMO_TEXT_LABELS: Record<'en' | 'ko' | 'ja' | 'es' | 'fr' | 'de', { refine
 };
 
 export default function MemoList() {
+  const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const [showFilters, setShowFilters] = useState(false);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
@@ -50,6 +51,7 @@ export default function MemoList() {
   const [targetContext, setTargetContext] = useState<MemoContext | ''>('');
   const [showShareMenu, setShowShareMenu] = useState(false);
   const [bulkDeleteProgress, setBulkDeleteProgress] = useState<{ completed: number; total: number } | null>(null);
+  const [showCreateMenu, setShowCreateMenu] = useState(false);
 
   // Editing state
   const [editingMemoId, setEditingMemoId] = useState<string | null>(null);
@@ -321,16 +323,66 @@ export default function MemoList() {
           </button>
         </div>
 
-        {/* Search Bar */}
-        <div className="relative">
-          <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search memos..."
-            className="w-full pl-12 pr-4 py-3 rounded-lg border border-border bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-          />
+        {/* Search Bar with Create Button */}
+        <div className="flex gap-2">
+          <div className="relative flex-1">
+            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search memos..."
+              className="w-full pl-12 pr-4 py-3 rounded-lg border border-border bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+            />
+          </div>
+
+          {/* Create Memo Dropdown */}
+          <div className="relative">
+            <button
+              onClick={() => setShowCreateMenu(!showCreateMenu)}
+              className="flex items-center gap-2 px-4 py-3 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors font-medium"
+            >
+              <Plus className="h-5 w-5" />
+              <span className="hidden sm:inline">New Memo</span>
+            </button>
+
+            {showCreateMenu && (
+              <>
+                <div
+                  className="fixed inset-0 z-10"
+                  onClick={() => setShowCreateMenu(false)}
+                />
+                <div className="absolute top-full mt-2 right-0 w-56 bg-background border border-border rounded-lg shadow-lg z-20 overflow-hidden">
+                  <button
+                    onClick={() => {
+                      navigate('/record');
+                      setShowCreateMenu(false);
+                    }}
+                    className="w-full px-4 py-3 text-left hover:bg-muted transition-colors flex items-center gap-3"
+                  >
+                    <Mic className="h-5 w-5 text-primary" />
+                    <div>
+                      <div className="font-medium">Voice Recording</div>
+                      <div className="text-xs text-muted-foreground">Record audio memo</div>
+                    </div>
+                  </button>
+                  <button
+                    onClick={() => {
+                      navigate('/write');
+                      setShowCreateMenu(false);
+                    }}
+                    className="w-full px-4 py-3 text-left hover:bg-muted transition-colors flex items-center gap-3 border-t border-border"
+                  >
+                    <Edit3 className="h-5 w-5 text-primary" />
+                    <div>
+                      <div className="font-medium">Text Input</div>
+                      <div className="text-xs text-muted-foreground">Type or upload file</div>
+                    </div>
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
         </div>
 
         {/* Filters (collapsible) */}
