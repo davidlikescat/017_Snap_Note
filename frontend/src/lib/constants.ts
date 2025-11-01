@@ -3,35 +3,67 @@ import { MemoContext } from '@/types/memo';
 export const TAG_CATEGORIES = {
   IDEAS: {
     en: ['#idea', '#inspiration', '#concept', '#brainstorm', '#innovation'],
-    ko: ['#아이디어', '#발상', '#영감', '#기획', '#컨셉']
+    ko: ['#아이디어', '#발상', '#영감', '#기획', '#컨셉'],
+    ja: ['#アイデア', '#インスピレーション', '#コンセプト', '#ブレスト', '#革新'],
+    es: ['#idea', '#inspiración', '#concepto', '#lluvia', '#innovación'],
+    fr: ['#idée', '#inspiration', '#concept', '#brainstorm', '#innovation'],
+    de: ['#Idee', '#Inspiration', '#Konzept', '#Brainstorm', '#Innovation']
   },
   LEARNING: {
     en: ['#learning', '#notes', '#insight', '#coaching', '#education'],
-    ko: ['#학습', '#독서노트', '#강의메모', '#인사이트', '#코칭']
+    ko: ['#학습', '#독서노트', '#강의메모', '#인사이트', '#코칭'],
+    ja: ['#学習', '#ノート', '#洞察', '#コーチング', '#教育'],
+    es: ['#aprendizaje', '#notas', '#perspicacia', '#coaching', '#educación'],
+    fr: ['#apprentissage', '#notes', '#insight', '#coaching', '#éducation'],
+    de: ['#Lernen', '#Notizen', '#Einsicht', '#Coaching', '#Bildung']
   },
   REFLECTION: {
     en: ['#emotion', '#reflection', '#gratitude', '#memory', '#diary'],
-    ko: ['#감정', '#자기성찰', '#감사', '#회상', '#일기']
+    ko: ['#감정', '#자기성찰', '#감사', '#회상', '#일기'],
+    ja: ['#感情', '#内省', '#感謝', '#思い出', '#日記'],
+    es: ['#emoción', '#reflexión', '#gratitud', '#memoria', '#diario'],
+    fr: ['#émotion', '#réflexion', '#gratitude', '#mémoire', '#journal'],
+    de: ['#Emotion', '#Reflexion', '#Dankbarkeit', '#Erinnerung', '#Tagebuch']
   },
   PEOPLE: {
     en: ['#people', '#conversation', '#observation', '#feedback', '#relationship'],
-    ko: ['#사람', '#대화기록', '#관찰', '#피드백', '#인간관계']
+    ko: ['#사람', '#대화기록', '#관찰', '#피드백', '#인간관계'],
+    ja: ['#人', '#会話', '#観察', '#フィードバック', '#関係'],
+    es: ['#gente', '#conversación', '#observación', '#feedback', '#relación'],
+    fr: ['#gens', '#conversation', '#observation', '#feedback', '#relation'],
+    de: ['#Menschen', '#Gespräch', '#Beobachtung', '#Feedback', '#Beziehung']
   },
   BUSINESS: {
     en: ['#work', '#project', '#marketing', '#strategy', '#meeting'],
-    ko: ['#업무메모', '#프로젝트', '#마케팅', '#전략', '#회의']
+    ko: ['#업무메모', '#프로젝트', '#마케팅', '#전략', '#회의'],
+    ja: ['#仕事', '#プロジェクト', '#マーケティング', '#戦略', '#会議'],
+    es: ['#trabajo', '#proyecto', '#marketing', '#estrategia', '#reunión'],
+    fr: ['#travail', '#projet', '#marketing', '#stratégie', '#réunion'],
+    de: ['#Arbeit', '#Projekt', '#Marketing', '#Strategie', '#Meeting']
   },
   PHILOSOPHY: {
     en: ['#philosophy', '#values', '#mindset', '#belief', '#principle'],
-    ko: ['#철학', '#가치관', '#삶의태도', '#신념', '#원칙']
+    ko: ['#철학', '#가치관', '#삶의태도', '#신념', '#원칙'],
+    ja: ['#哲学', '#価値観', '#マインドセット', '#信念', '#原則'],
+    es: ['#filosofía', '#valores', '#mentalidad', '#creencia', '#principio'],
+    fr: ['#philosophie', '#valeurs', '#mentalité', '#croyance', '#principe'],
+    de: ['#Philosophie', '#Werte', '#Denkweise', '#Glaube', '#Prinzip']
   },
   CREATIVE: {
     en: ['#writing', '#content', '#story', '#creative', '#art'],
-    ko: ['#글쓰기', '#콘텐츠아이디어', '#스토리', '#창작', '#예술']
+    ko: ['#글쓰기', '#콘텐츠아이디어', '#스토리', '#창작', '#예술'],
+    ja: ['#執筆', '#コンテンツ', '#ストーリー', '#創作', '#アート'],
+    es: ['#escritura', '#contenido', '#historia', '#creativo', '#arte'],
+    fr: ['#écriture', '#contenu', '#histoire', '#créatif', '#art'],
+    de: ['#Schreiben', '#Inhalt', '#Geschichte', '#Kreativ', '#Kunst']
   },
   GOALS: {
     en: ['#vision', '#goals', '#future', '#habits', '#planning'],
-    ko: ['#비전', '#목표', '#미래계획', '#습관', '#계획']
+    ko: ['#비전', '#목표', '#미래계획', '#습관', '#계획'],
+    ja: ['#ビジョン', '#目標', '#未来', '#習慣', '#計画'],
+    es: ['#visión', '#objetivos', '#futuro', '#hábitos', '#planificación'],
+    fr: ['#vision', '#objectifs', '#futur', '#habitudes', '#planification'],
+    de: ['#Vision', '#Ziele', '#Zukunft', '#Gewohnheiten', '#Planung']
   }
 } as const;
 
@@ -62,15 +94,53 @@ export const CONTEXT_TYPES: Record<MemoContext, { en: string; ko: string }> = {
 
 export const ALL_TAGS = {
   en: Object.values(TAG_CATEGORIES).flatMap(cat => cat.en),
-  ko: Object.values(TAG_CATEGORIES).flatMap(cat => cat.ko)
+  ko: Object.values(TAG_CATEGORIES).flatMap(cat => cat.ko),
+  ja: Object.values(TAG_CATEGORIES).flatMap(cat => cat.ja),
+  es: Object.values(TAG_CATEGORIES).flatMap(cat => cat.es),
+  fr: Object.values(TAG_CATEGORIES).flatMap(cat => cat.fr),
+  de: Object.values(TAG_CATEGORIES).flatMap(cat => cat.de)
 };
+
+// Helper function to get tags for a language with custom tags
+export function getTagsForLanguage(language: 'en' | 'ko' | 'ja' | 'es' | 'fr' | 'de'): string[] {
+  const defaultTags = ALL_TAGS[language] || ALL_TAGS.en;
+  const customTags = getCustomTags(language);
+  return [...defaultTags, ...customTags];
+}
+
+// Custom tags storage
+export function getCustomTags(language: 'en' | 'ko' | 'ja' | 'es' | 'fr' | 'de'): string[] {
+  const stored = localStorage.getItem(`custom-tags-${language}`);
+  if (!stored) return [];
+  try {
+    return JSON.parse(stored);
+  } catch {
+    return [];
+  }
+}
+
+export function setCustomTags(language: 'en' | 'ko' | 'ja' | 'es' | 'fr' | 'de', tags: string[]): void {
+  localStorage.setItem(`custom-tags-${language}`, JSON.stringify(tags));
+}
+
+export function addCustomTag(language: 'en' | 'ko' | 'ja' | 'es' | 'fr' | 'de', tag: string): void {
+  const current = getCustomTags(language);
+  if (!current.includes(tag)) {
+    setCustomTags(language, [...current, tag]);
+  }
+}
+
+export function removeCustomTag(language: 'en' | 'ko' | 'ja' | 'es' | 'fr' | 'de', tag: string): void {
+  const current = getCustomTags(language);
+  setCustomTags(language, current.filter(t => t !== tag));
+}
 
 export const APP_CONFIG = {
   MAX_AUDIO_DURATION: Number((import.meta as any).env?.VITE_MAX_AUDIO_DURATION) || 300000, // 5 minutes
   MAX_TEXT_LENGTH: Number((import.meta as any).env?.VITE_MAX_TEXT_LENGTH) || 1000, // Default 1000 characters
   MAX_TAGS: 3,
   MIN_TAGS: 1,
-  SUPPORTED_LANGUAGES: ['en', 'ko'] as const
+  SUPPORTED_LANGUAGES: ['en', 'ko', 'ja', 'es', 'fr', 'de'] as const
 } as const;
 
 export const API_ENDPOINTS = {

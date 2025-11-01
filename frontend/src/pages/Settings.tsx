@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowLeft, Save, Eye, EyeOff, CheckCircle, XCircle } from 'lucide-react';
+import { ArrowLeft, Save, Eye, EyeOff, CheckCircle, XCircle, Plus, X, Tag } from 'lucide-react';
 import { toast } from 'sonner';
+import { useLanguageStore, type AppLanguage } from '@/stores/useLanguageStore';
+import { getCustomTags, setCustomTags, removeCustomTag, addCustomTag } from '@/lib/constants';
 
 interface NotionSettings {
   apiKey: string;
@@ -10,6 +12,7 @@ interface NotionSettings {
 }
 
 export default function Settings() {
+  const { language } = useLanguageStore();
   const [notionSettings, setNotionSettings] = useState<NotionSettings>({
     apiKey: '',
     databaseId: '',
@@ -18,6 +21,10 @@ export default function Settings() {
   const [showApiKey, setShowApiKey] = useState(false);
   const [isTesting, setIsTesting] = useState(false);
   const [testResult, setTestResult] = useState<'success' | 'error' | null>(null);
+
+  // Tag management
+  const [customTags, setCustomTagsState] = useState<string[]>([]);
+  const [newCustomTag, setNewCustomTag] = useState('');
 
   // Load settings from localStorage on mount
   useEffect(() => {
@@ -31,6 +38,11 @@ export default function Settings() {
       }
     }
   }, []);
+
+  // Load custom tags when language changes
+  useEffect(() => {
+    setCustomTagsState(getCustomTags(language));
+  }, [language]);
 
   const handleSave = () => {
     if (!notionSettings.apiKey || !notionSettings.databaseId) {
@@ -88,6 +100,33 @@ export default function Settings() {
     localStorage.removeItem('notionSettings');
     setTestResult(null);
     toast.success('Notion settings have been reset');
+  };
+
+  // Tag management handlers
+  const handleAddCustomTag = () => {
+    const trimmed = newCustomTag.trim();
+    if (!trimmed) {
+      toast.error('Please enter a tag name');
+      return;
+    }
+
+    const formatted = trimmed.startsWith('#') ? trimmed : `#${trimmed}`;
+
+    if (customTags.includes(formatted)) {
+      toast.error('Tag already exists');
+      return;
+    }
+
+    addCustomTag(language, formatted);
+    setCustomTagsState([...customTags, formatted]);
+    setNewCustomTag('');
+    toast.success(`Tag "${formatted}" added`);
+  };
+
+  const handleRemoveCustomTag = (tag: string) => {
+    removeCustomTag(language, tag);
+    setCustomTagsState(customTags.filter(t => t !== tag));
+    toast.success(`Tag "${tag}" removed`);
   };
 
   return (
@@ -260,6 +299,71 @@ export default function Settings() {
               <li>Copy the Database ID from the Database URL</li>
               <li>Enter API Key and Database ID above, then save</li>
             </ol>
+          </div>
+        </div>
+
+        {/* Tag Management Section */}
+        <div className="space-y-4">
+          <div className="p-6 rounded-lg border border-border bg-card space-y-4">
+            <div className="flex items-center gap-2">
+              <Tag className="h-5 w-5 text-primary" />
+              <h2 className="text-xl font-semibold">Custom Tags</h2>
+            </div>
+
+            <p className="text-sm text-muted-foreground">
+              Add custom tags for the current language. These tags will be available when creating memos.
+            </p>
+
+            {/* Add New Tag */}
+            <div className="space-y-2">
+              <label className="text-sm font-semibold">Add Custom Tag</label>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={newCustomTag}
+                  onChange={(e) => setNewCustomTag(e.target.value)}
+                  onKeyPress={(e) => e.key === 'Enter' && handleAddCustomTag()}
+                  placeholder="e.g., review, 회고, レビュー"
+                  className="flex-1 p-3 rounded-lg border border-border bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                />
+                <button
+                  onClick={handleAddCustomTag}
+                  className="flex items-center gap-2 px-4 py-3 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+                >
+                  <Plus className="h-4 w-4" />
+                  <span>Add</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Custom Tags List */}
+            {customTags.length > 0 && (
+              <div className="space-y-2">
+                <label className="text-sm font-semibold">Your Custom Tags</label>
+                <div className="flex flex-wrap gap-2">
+                  {customTags.map((tag) => (
+                    <div
+                      key={tag}
+                      className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 text-primary border border-primary/20"
+                    >
+                      <span className="text-sm">{tag}</span>
+                      <button
+                        onClick={() => handleRemoveCustomTag(tag)}
+                        className="hover:text-destructive transition-colors"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {customTags.length === 0 && (
+              <div className="p-4 rounded-lg bg-muted/50 text-center text-sm text-muted-foreground">
+                No custom tags yet. Add your first custom tag above.
+              </div>
+            )}
           </div>
         </div>
       </div>

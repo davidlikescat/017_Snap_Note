@@ -4,7 +4,7 @@ import { ArrowLeft, Save, Edit2, Plus, X, CheckCircle2, List } from 'lucide-reac
 import { toast } from 'sonner';
 import { useCreateMemo } from '@/hooks/useMemo';
 import { useRefine } from '@/hooks/useRefine';
-import { ALL_TAGS, CONTEXT_TYPES } from '@/lib/constants';
+import { getTagsForLanguage, addCustomTag, CONTEXT_TYPES } from '@/lib/constants';
 import { MemoContext } from '@/types/memo';
 import type { AppLanguage } from '@/stores/useLanguageStore';
 import { getTagStyleClasses, formatTagLabel } from '@/lib/tagStyles';
@@ -243,7 +243,14 @@ export default function Result() {
       return;
     }
 
+    // Add to current memo tags
     setTags([...tags, formattedTag]);
+
+    // Save to custom tags for this language (if not already in default tags)
+    if (!availableTags.includes(formattedTag)) {
+      addCustomTag(language, formattedTag);
+    }
+
     setNewTag('');
     toast.success(`Tag "${formatTagLabel(formattedTag)}" added`);
   };
@@ -252,7 +259,7 @@ export default function Result() {
     setTags(tags.filter(t => t !== tagToRemove));
   };
 
-  const availableTags = language === 'ko' ? ALL_TAGS.ko : ALL_TAGS.en;
+  const availableTags = getTagsForLanguage(language);
   const isRefining = refineState?.isRefining || false;
 
   return (

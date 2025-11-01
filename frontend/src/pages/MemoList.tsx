@@ -3,8 +3,9 @@ import { Link, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Search, Filter, Loader2, CheckSquare, Square, Trash2, FolderInput, Share2, FileText, Plus, Mic, Edit3 } from 'lucide-react';
 import { useMemos, useBulkDeleteMemos, useBulkUpdateContext, useUpdateMemo } from '@/hooks/useMemo';
 import { formatDate } from '@/lib/utils';
-import { ALL_TAGS, CONTEXT_TYPES } from '@/lib/constants';
+import { getTagsForLanguage, CONTEXT_TYPES } from '@/lib/constants';
 import { MemoContext } from '@/types/memo';
+import { useLanguageStore } from '@/stores/useLanguageStore';
 import { toast } from 'sonner';
 import { sendMemosToNotion, getNotionSettings } from '@/lib/notion';
 import { getTagStyleClasses, formatTagLabel } from '@/lib/tagStyles';
@@ -39,6 +40,7 @@ const MEMO_TEXT_LABELS: Record<'en' | 'ko' | 'ja' | 'es' | 'fr' | 'de', { refine
 
 export default function MemoList() {
   const navigate = useNavigate();
+  const { language: globalLanguage } = useLanguageStore();
   const [searchQuery, setSearchQuery] = useState('');
   const [showFilters, setShowFilters] = useState(false);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
@@ -414,7 +416,7 @@ export default function MemoList() {
                 Filter by Tags {selectedTags.length > 0 && `(${selectedTags.length})`}
               </label>
               <div className="flex flex-wrap gap-2">
-                {[...ALL_TAGS.en, ...ALL_TAGS.ko].map((tag) => (
+                {getTagsForLanguage(globalLanguage).map((tag) => (
                   <button
                     key={tag}
                     onClick={() => handleTagToggle(tag)}
