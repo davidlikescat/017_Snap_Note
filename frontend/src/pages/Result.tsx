@@ -100,6 +100,10 @@ export default function Result() {
       return;
     }
 
+    if (autoSaveAttemptedRef.current) {
+      return;
+    }
+
     if (refined.trim().length === 0 || tags.length === 0 || originalText.trim().length === 0) {
       return;
     }
@@ -142,7 +146,6 @@ export default function Result() {
     originalText,
     language,
     refineState,
-    autoSaveState,
     createMemoAsync,
   ]);
 
