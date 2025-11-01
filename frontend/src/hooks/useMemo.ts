@@ -185,16 +185,42 @@ async function deleteMemo(id: string): Promise<void> {
   }
 }
 
-// Bulk delete memos
-async function bulkDeleteMemos(ids: string[]): Promise<void> {
-  const { error } = await supabase
-    .from('memos')
-    .update({ is_deleted: true })
-    .in('id', ids);
+const BULK_OPERATION_CHUNK_SIZE = 50;
 
-  if (error) {
-    console.error('Bulk delete memos error:', error);
-    throw new Error('Failed to delete memos');
+interface BulkDeleteProgress {
+  completed: number;
+  total: number;
+}
+
+interface BulkDeleteOptions {
+  chunkSize?: number;
+  onProgress?: (progress: BulkDeleteProgress) => void;
+}
+
+// Bulk delete memos
+async function bulkDeleteMemos(ids: string[], options: BulkDeleteOptions = {}): Promise<void> {
+  if (ids.length === 0) return;
+
+  const { chunkSize = BULK_OPERATION_CHUNK_SIZE, onProgress } = options;
+  const safeChunkSize = chunkSize > 0 ? chunkSize : BULK_OPERATION_CHUNK_SIZE;
+  const total = ids.length;
+
+  for (let index = 0; index < ids.length; index += safeChunkSize) {
+    const chunk = ids.slice(index, index + safeChunkSize);
+    const { error } = await supabase
+      .from('memos')
+      .update({ is_deleted: true })
+      .in('id', chunk);
+
+    if (error) {
+      console.error('Bulk delete memos error:', error);
+      throw new Error('Failed to delete memos');
+    }
+
+    onProgress?.({
+      completed: Math.min(index + chunk.length, total),
+      total,
+    });
   }
 }
 
@@ -274,11 +300,18 @@ export function useDeleteMemo() {
   });
 }
 
+type BulkDeleteVariables = {
+  ids: string[];
+  chunkSize?: number;
+  onProgress?: (progress: BulkDeleteProgress) => void;
+};
+
 export function useBulkDeleteMemos() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: bulkDeleteMemos,
+    mutationFn: ({ ids, chunkSize, onProgress }: BulkDeleteVariables) =>
+      bulkDeleteMemos(ids, { chunkSize, onProgress }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [QUERY_KEY] });
     },

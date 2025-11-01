@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, type KeyboardEvent } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { X, Plus, Check } from 'lucide-react';
 import { getTagStyleClasses, formatTagLabel } from '@/lib/tagStyles';
 
@@ -61,7 +61,7 @@ export default function TagEditor({ tags, availableTags, onUpdate, maxTags = 3 }
   }, [isOpen]);
 
   // Handle keyboard navigation
-  const handleKeyDown = (e: KeyboardEvent) => {
+  const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'ArrowDown') {
       e.preventDefault();
       setFocusedIndex((prev) => Math.min(prev + 1, options.length - 1));
