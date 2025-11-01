@@ -284,7 +284,7 @@ export default async function handler(
 
     const llm = new ChatGroq({
       apiKey: groqApiKey,
-      model: "llama-3.1-70b-versatile", // Free tier: fast and good quality
+      modelName: "llama-3.1-70b-versatile", // Free tier: fast and good quality
       temperature: 0.3, // Lower temperature for more consistent JSON output
       maxTokens: 1024,
     });
