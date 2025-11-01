@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, useScroll, useTransform } from 'framer-motion';
-import { Mic, Zap, Brain, Link2, BookOpen, ChevronRight, Play, Check, Star, ArrowRight } from 'lucide-react';
+import { Mic, Zap, Brain, Link2, BookOpen, ChevronRight, Play, Check, ArrowRight } from 'lucide-react';
 
 // Headline variations for A/B testing
 const HEADLINES = {
@@ -17,8 +17,6 @@ export default function Landing() {
   const opacity = useTransform(scrollYProgress, [0, 0.2], [1, 0]);
   const scale = useTransform(scrollYProgress, [0, 0.2], [1, 0.95]);
 
-  // Simulated user count (would be real API call in production)
-  const [userCount] = useState(1247);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background via-background to-muted">
@@ -156,37 +154,6 @@ export default function Landing() {
                 </button>
               </motion.div>
 
-              {/* Social Proof */}
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.6 }}
-                className="flex items-center gap-8 pt-4"
-              >
-                <div className="flex items-center gap-2">
-                  <div className="flex -space-x-2">
-                    {[1, 2, 3, 4].map((i) => (
-                      <div
-                        key={i}
-                        className="w-8 h-8 rounded-full border-2 border-background bg-gradient-to-br from-primary to-blue-500 flex items-center justify-center text-xs text-white font-semibold"
-                      >
-                        {String.fromCharCode(64 + i)}
-                      </div>
-                    ))}
-                  </div>
-                  <div className="text-sm">
-                    <div className="font-semibold">{userCount.toLocaleString()}+ users</div>
-                    <div className="text-muted-foreground">Already capturing ideas</div>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-1">
-                  {[1, 2, 3, 4, 5].map((i) => (
-                    <Star key={i} className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                  ))}
-                  <span className="ml-2 text-sm font-semibold">4.9/5</span>
-                </div>
-              </motion.div>
             </motion.div>
 
             {/* Right Column - Interactive Demo */}
@@ -261,7 +228,7 @@ export default function Landing() {
                 Ready to capture your best ideas?
               </h2>
               <p className="text-xl opacity-90 max-w-2xl mx-auto">
-                Join {userCount.toLocaleString()}+ users who never lose a thought
+                Never lose a thought again
               </p>
 
               <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
