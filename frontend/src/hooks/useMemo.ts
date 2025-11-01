@@ -88,7 +88,15 @@ async function fetchMemoById(id: string): Promise<Memo> {
 
 // Create new memo
 async function createMemo(input: CreateMemoInput): Promise<Memo> {
+  // Get current user for RLS
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (!user) {
+    throw new Error('User not authenticated');
+  }
+
   const basePayload = {
+    user_id: user.id,  // Add user_id for proper data isolation
     tags: input.tags,
     context: input.context,
     insight: input.insight ?? null,
