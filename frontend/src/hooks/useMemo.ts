@@ -9,7 +9,7 @@ function normalizeMemo(row: any): Memo {
   return {
     id: row.id,
     refined: row.refined ?? row.summary ?? '',
-    tags: row.tags ?? [],
+    tag: row.tag ?? '',
     context: row.context,
     insight: row.insight ?? null,
     original_text: row.original_text ?? '',
@@ -31,16 +31,12 @@ async function fetchMemos(filters?: MemoFilters): Promise<Memo[]> {
     .order('created_at', { ascending: false });
 
   // Apply filters
-  if (filters?.tags && filters.tags.length > 0) {
-    query = query.overlaps('tags', filters.tags);
+  if (filters?.tag) {
+    query = query.eq('tag', filters.tag);
   }
 
   if (filters?.context) {
     query = query.eq('context', filters.context);
-  }
-
-  if (filters?.language) {
-    query = query.eq('language', filters.language);
   }
 
   if (filters?.search) {
@@ -97,7 +93,7 @@ async function createMemo(input: CreateMemoInput): Promise<Memo> {
 
   const basePayload = {
     user_id: user.id,  // Add user_id for proper data isolation
-    tags: input.tags,
+    tag: input.tag,
     context: input.context,
     insight: input.insight ?? null,
     original_text: input.original_text,
@@ -138,7 +134,7 @@ async function updateMemo(input: UpdateMemoInput): Promise<Memo> {
   const { id, ...updates } = input;
 
   const payload: Record<string, unknown> = {
-    ...(updates.tags ? { tags: updates.tags } : {}),
+    ...(updates.tag ? { tag: updates.tag } : {}),
     ...(updates.context ? { context: updates.context } : {}),
   };
 
@@ -356,7 +352,7 @@ export function useOptimisticCreateMemo() {
         const optimisticMemo: Memo = {
           id: 'temp-' + Date.now(),
           refined: newMemo.refined,
-          tags: newMemo.tags,
+          tag: newMemo.tag,
           context: newMemo.context,
           insight: newMemo.insight ?? null,
           original_text: newMemo.original_text,

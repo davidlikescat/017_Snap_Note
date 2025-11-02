@@ -1,7 +1,7 @@
 export interface Memo {
   id: string;
   refined: string;
-  tags: string[];
+  tag: string;
   context: MemoContext;
   insight: string | null;
   original_text: string;
@@ -46,7 +46,7 @@ export type MemoContext =
 
 export interface CreateMemoInput {
   refined: string;
-  tags: string[];
+  tag: string;
   context: MemoContext;
   insight?: string;
   original_text: string;
@@ -57,15 +57,14 @@ export interface CreateMemoInput {
 export interface UpdateMemoInput {
   id: string;
   refined?: string;
-  tags?: string[];
+  tag?: string;
   context?: MemoContext;
   insight?: string;
 }
 
 export interface MemoFilters {
-  tags?: string[];
+  tag?: string;
   context?: MemoContext;
-  language?: 'en' | 'ko' | 'ja' | 'es' | 'fr' | 'de';
   search?: string;
   limit?: number;
   offset?: number;
@@ -73,7 +72,7 @@ export interface MemoFilters {
 
 export interface AIRefinementResult {
   refined: string;
-  tags: string[];
+  tag: string;
   context: MemoContext;
   insight: string;
   language?: 'en' | 'ko' | 'ja' | 'es' | 'fr' | 'de';

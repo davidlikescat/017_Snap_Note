@@ -43,9 +43,8 @@ export default function MemoList() {
   const { language: globalLanguage } = useLanguageStore();
   const [searchQuery, setSearchQuery] = useState('');
   const [showFilters, setShowFilters] = useState(false);
-  const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [selectedTag, setSelectedTag] = useState<string | null>(null);
   const [selectedContext, setSelectedContext] = useState<MemoContext | ''>('');
-  const [selectedLanguage, setSelectedLanguage] = useState<'en' | 'ko' | 'ja' | 'es' | 'fr' | 'de' | ''>('');
 
   // Bulk selection states
   const [selectedMemos, setSelectedMemos] = useState<string[]>([]);
@@ -68,12 +67,11 @@ export default function MemoList() {
   // Fetch filter params
   const filters = useReactMemo(() => {
     const f: any = {};
-    if (selectedTags.length > 0) f.tags = selectedTags;
+    if (selectedTag) f.tag = selectedTag;
     if (selectedContext) f.context = selectedContext;
-    if (selectedLanguage) f.language = selectedLanguage;
     if (searchQuery.trim()) f.search = searchQuery.trim();
     return f;
-  }, [selectedTags, selectedContext, selectedLanguage, searchQuery]);
+  }, [selectedTag, selectedContext, searchQuery]);
 
   const { data: memos = [], isLoading, isError, error } = useMemos(filters);
 
@@ -194,9 +192,7 @@ export default function MemoList() {
       .map((m) => {
         const memoLabels =
           MEMO_TEXT_LABELS[m.language as keyof typeof MEMO_TEXT_LABELS] ?? MEMO_TEXT_LABELS.en;
-        return `${memoLabels.refined}:\n${m.refined}\n\n${memoLabels.original}:\n${m.original_text}\n\nTags: ${m.tags
-          .map((tag) => formatTagLabel(tag))
-          .join(', ')}\nContext: ${m.context}`;
+        return `${memoLabels.refined}:\n${m.refined}\n\n${memoLabels.original}:\n${m.original_text}\n\nTag: ${formatTagLabel(m.tag)}\nContext: ${m.context}`;
       })
       .join('\n\n---\n\n');
 
@@ -259,9 +255,7 @@ export default function MemoList() {
       .map((m) => {
         const memoLabels =
           MEMO_TEXT_LABELS[m.language as keyof typeof MEMO_TEXT_LABELS] ?? MEMO_TEXT_LABELS.en;
-        return `## ${m.refined}\n\n**Tags:** ${m.tags
-          .map((tag) => formatTagLabel(tag))
-          .join(', ')}\n**Context:** ${m.context}\n**Date:** ${formatDate(
+        return `## ${m.refined}\n\n**Tag:** ${formatTagLabel(m.tag)}\n**Context:** ${m.context}\n**Date:** ${formatDate(
           m.created_at
         )}\n\n${m.insight ? `**Insight:** ${m.insight}\n\n` : ''}**${memoLabels.original}:**\n${
           m.original_text
@@ -282,12 +276,9 @@ export default function MemoList() {
     toast.success('Exported successfully');
   };
 
-  const handleTagToggle = (tag: string) => {
-    if (selectedTags.includes(tag)) {
-      setSelectedTags(selectedTags.filter((t) => t !== tag));
-    } else {
-      setSelectedTags([...selectedTags, tag]);
-    }
+  const handleTagClick = (tag: string) => {
+    // Toggle: if clicking the same tag, clear filter. Otherwise, set new filter.
+    setSelectedTag(selectedTag === tag ? null : tag);
   };
 
   // Tag management handlers
@@ -355,16 +346,14 @@ export default function MemoList() {
   };
 
   const clearFilters = () => {
-    setSelectedTags([]);
+    setSelectedTag(null);
     setSelectedContext('');
-    setSelectedLanguage('');
     setSearchQuery('');
   };
 
   const hasFilters =
-    selectedTags.length > 0 ||
+    selectedTag !== null ||
     selectedContext !== '' ||
-    selectedLanguage !== '' ||
     searchQuery.trim() !== '';
 
   return (
@@ -460,31 +449,11 @@ export default function MemoList() {
         {/* Filters (collapsible) */}
         {showFilters && (
           <div className="p-4 rounded-lg border border-border bg-muted/50 space-y-4 animate-in slide-in-from-top">
-            {/* Language Filter */}
-            <div>
-              <label className="text-sm font-semibold mb-2 block">Language</label>
-              <div className="flex gap-2 flex-wrap">
-                {LANGUAGE_OPTIONS.map(({ value, label }) => (
-                  <button
-                    key={value || 'all'}
-                    onClick={() => setSelectedLanguage(value)}
-                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                      selectedLanguage === value
-                        ? 'bg-primary text-primary-foreground'
-                        : 'bg-background border border-border hover:bg-muted'
-                    }`}
-                  >
-                    {label}
-                  </button>
-                ))}
-              </div>
-            </div>
-
             {/* Tags Filter */}
             <div>
               <div className="flex items-center justify-between mb-2">
                 <label className="text-sm font-semibold">
-                  Filter by Tags {selectedTags.length > 0 && `(${selectedTags.length})`}
+                  Filter by Tag {selectedTag && `(${formatTagLabel(selectedTag)})`}
                 </label>
                 <button
                   onClick={() => setShowAddTag(!showAddTag)}
@@ -552,9 +521,9 @@ export default function MemoList() {
                       // View mode
                       <div className="flex items-center gap-1 px-3 py-1 rounded-full text-sm transition-colors bg-background border border-border hover:bg-muted">
                         <button
-                          onClick={() => handleTagToggle(tag)}
+                          onClick={() => handleTagClick(tag)}
                           className={`${
-                            selectedTags.includes(tag) ? 'font-semibold text-primary' : ''
+                            selectedTag === tag ? 'font-semibold text-primary' : ''
                           }`}
                         >
                           {tag}
@@ -675,10 +644,11 @@ export default function MemoList() {
 
                 {/* Bulk Actions Toolbar */}
                 {selectedMemos.length > 0 && (
-                  <div className="flex gap-2 p-3 rounded-lg bg-primary/5 border border-primary/20 animate-in slide-in-from-top">
+                  <div className="flex flex-wrap items-center gap-2 p-3 rounded-lg bg-primary/5 border border-primary/20 animate-in slide-in-from-top">
                     <button
                       onClick={() => setShowMoveDialog(true)}
-                      className="flex items-center gap-2 px-4 py-2 rounded-lg bg-background border border-border hover:bg-muted transition-colors"
+                      disabled={isBulkDeleting}
+                      className="flex items-center gap-2 px-4 py-2 rounded-lg bg-background border border-border hover:bg-muted transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
                     >
                       <FolderInput className="h-4 w-4" />
                       <span className="text-sm font-medium">Move</span>
@@ -686,7 +656,8 @@ export default function MemoList() {
                     <div className="relative">
                       <button
                         onClick={() => setShowShareMenu(!showShareMenu)}
-                        className="flex items-center gap-2 px-4 py-2 rounded-lg bg-background border border-border hover:bg-muted transition-colors"
+                        disabled={isBulkDeleting}
+                        className="flex items-center gap-2 px-4 py-2 rounded-lg bg-background border border-border hover:bg-muted transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
                       >
                         <Share2 className="h-4 w-4" />
                         <span className="text-sm font-medium">Share</span>
@@ -721,18 +692,35 @@ export default function MemoList() {
                     </div>
                     <button
                       onClick={handleExportToDocument}
-                      className="flex items-center gap-2 px-4 py-2 rounded-lg bg-background border border-border hover:bg-muted transition-colors"
+                      disabled={isBulkDeleting}
+                      className="flex items-center gap-2 px-4 py-2 rounded-lg bg-background border border-border hover:bg-muted transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
                     >
                       <FileText className="h-4 w-4" />
                       <span className="text-sm font-medium">Export</span>
                     </button>
                     <button
                       onClick={handleBulkDelete}
-                      className="flex items-center gap-2 px-4 py-2 rounded-lg bg-destructive/10 border border-destructive/30 text-destructive hover:bg-destructive/20 transition-colors"
+                      disabled={isBulkDeleting}
+                      className="flex items-center gap-2 px-4 py-2 rounded-lg bg-destructive/10 border border-destructive/30 text-destructive hover:bg-destructive/20 transition-colors disabled:opacity-60 disabled:cursor-wait"
                     >
-                      <Trash2 className="h-4 w-4" />
-                      <span className="text-sm font-medium">Delete</span>
+                      {isBulkDeleting ? (
+                        <>
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                          <span className="text-sm font-medium">Deleting…</span>
+                        </>
+                      ) : (
+                        <>
+                          <Trash2 className="h-4 w-4" />
+                          <span className="text-sm font-medium">Delete</span>
+                        </>
+                      )}
                     </button>
+                    {isBulkDeleting && bulkDeleteProgress && (
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                        <span>{bulkDeleteProgress.completed}/{bulkDeleteProgress.total}</span>
+                        <span>processed</span>
+                      </div>
+                    )}
                   </div>
                 )}
 
@@ -769,18 +757,21 @@ export default function MemoList() {
                             {/* Header */}
                             <div className="flex flex-wrap items-center justify-between gap-3">
                               <div className="flex flex-wrap gap-2">
-                                {memo.tags.map((tag) => {
-                                  const palette = getTagStyleClasses(tag);
+                                {(() => {
+                                  const palette = getTagStyleClasses(memo.tag);
                                   return (
-                                    <span
-                                      key={tag}
-                                      className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium capitalize transition-colors ${palette.badge}`}
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleTagClick(memo.tag);
+                                      }}
+                                      className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium capitalize transition-colors hover:opacity-80 ${palette.badge}`}
                                     >
                                       <span className={`h-2 w-2 rounded-full ${palette.dot}`} />
-                                      <span>{formatTagLabel(tag)}</span>
-                                    </span>
+                                      <span>{formatTagLabel(memo.tag)}</span>
+                                    </button>
                                   );
-                                })}
+                                })()}
                               </div>
                               <div className="flex flex-col items-end gap-1 text-xs text-muted-foreground">
                                 <span className="inline-flex items-center gap-2 font-medium text-foreground">

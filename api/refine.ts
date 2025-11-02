@@ -5,7 +5,7 @@ import type { VercelRequest, VercelResponse } from "@vercel/node";
 // Zod schema for validation
 const RefinedMemoSchema = z.object({
   refined: z.string().max(1000), // summary -> refined, 길이 증가
-  tags: z.array(z.string()).min(1).max(3),
+  tag: z.string(),
   context: z.string(),
   insight: z.string().optional(),
 });
@@ -129,7 +129,7 @@ Good: "The meeting proceeded smoothly. We discussed the project timeline and add
    - Add appropriate punctuation and capitalization
    - Make it sound like a professional note, not casual speech
 
-2. **tags**: Choose up to 3 most semantically relevant tags with # prefix
+2. **tag**: Choose ONE most semantically relevant tag with # prefix
    #work-log #meeting-memo #idea #self-reflection #emotion-log #relationships #habits #goals #feedback #decision #learning-notes #planning #experiment #review #daily-log
    (You can create new tags if needed - use the same language as input)
 
@@ -142,7 +142,7 @@ Good: "The meeting proceeded smoothly. We discussed the project timeline and add
 ## Output Format (JSON ONLY)
 {
   "refined": "Professionally polished version - MUST be significantly enhanced from original",
-  "tags": ["#tag1", "#tag2"],
+  "tag": "#single-tag",
   "context": "Context Type",
   "insight": "Optional actionable suggestion or empty string"
 }
@@ -205,7 +205,7 @@ Good: "The meeting proceeded smoothly. We discussed the project timeline and add
    - 적절한 문장부호와 맞춤법 적용
    - 격식있는 문서처럼 들리게 작성
 
-2. **tags**: 의미상 가장 적합한 태그 최대 3개 (# 접두사)
+2. **tag**: 의미상 가장 적합한 태그 1개만 선택 (# 접두사)
    #업무기록 #회의메모 #아이디어 #자기성찰 #감정기록 #관계 #습관 #목표 #피드백 #결정 #학습노트 #기획 #실험 #리뷰 #일상기록
    (필요시 새 태그 생성 가능 - 입력 언어와 동일하게)
 
@@ -218,7 +218,7 @@ Good: "The meeting proceeded smoothly. We discussed the project timeline and add
 ## 출력 형식 (JSON만 출력)
 {
   "refined": "전문적으로 다듬어진 버전 - 원문과 확연히 달라야 함",
-  "tags": ["#태그1", "#태그2"],
+  "tag": "#태그1개",
   "context": "맥락",
   "insight": "실행 가능한 제안 또는 빈 문자열"
 }
@@ -341,14 +341,11 @@ export default async function handler(
           console.error("[REFINE] GROQ_API_KEY exists:", !!process.env.GROQ_API_KEY);
           console.error("[REFINE] GROQ_API_KEY length:", process.env.GROQ_API_KEY?.length || 0);
 
-          const fallbackTags =
-            language === "ko"
-              ? ["#메모", "#생각", "#기록"]
-              : ["#memo", "#thought", "#note"];
+          const fallbackTag = language === "ko" ? "#메모" : "#memo";
 
           return res.status(200).json({
             refined: text.slice(0, 1000), // summary -> refined
-            tags: fallbackTags.slice(0, 3),
+            tag: fallbackTag,
             context: FALLBACK_CONTEXT,
             insight: "",
             language,

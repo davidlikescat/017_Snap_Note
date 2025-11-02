@@ -1,264 +1,220 @@
-# 🧠 MIND NOTE - AI-Powered Memo System
+# Snap Note · AI Memo Workspace
 
-> Transform your thoughts into organized knowledge with AI
-
-**Voice/Text → AI Refinement → Searchable Knowledge Base**
+> Capture thoughts by voice or text, let AI polish them, and keep everything searchable and shareable.
 
 ---
 
-## 🎯 Features
+## Highlights
 
-- 🎙️ **Voice Recording** - Real-time speech-to-text with Web Speech API
-- 🤖 **AI Refinement** - Automatic summarization and categorization via LangChain
-- 🏷️ **Smart Tagging** - AI-generated tags from predefined categories
-- 🔍 **Full-Text Search** - Find memos instantly with PostgreSQL search
-- 📱 **PWA Ready** - Install as native app, works offline
-- 🌐 **Multilingual** - English and Korean support
-
----
-
-## 🏗️ Tech Stack
-
-### Frontend
-- React 18 + TypeScript
-- Vite 5
-- TailwindCSS + shadcn/ui
-- Zustand (State Management)
-- React Router 6
-- Workbox (PWA)
-
-### Backend
-- Vercel Serverless Functions
-- LangChain (AI Framework)
-- Supabase (PostgreSQL + Auth + Storage)
-
-### AI Services (FREE Tier)
-- **STT**: Web Speech API (browser native)
-- **LLM**: Groq API (free, fast) or Ollama (local)
-- **Framework**: LangChain (MIT license)
+- **Voice & Text Capture** – Record straight from the browser or paste/upload notes. Auto language detection (EN/KR/JP/ES/FR/DE) keeps flows seamless.  
+- **AI Refinement Pairing** – Groq-powered refinement mirrors polished copy alongside the original draft so you never lose context.  
+- **Smart Tagging & Contexts** – Maintain structured categories with localized labels, quick filters, and inline tag editing.  
+- **Auto Save & Version Safety** – Result screen persists memos as soon as requirements are met and falls back gracefully if AI is unavailable.  
+- **Bulk Operations at Scale** – Chunked Supabase updates (50 memos per batch) with live progress feedback prevent timeouts during cleanup.  
+- **Notion Export Tools** – One-click sharing or bulk sync to your Notion database, plus a connectivity tester to verify credentials.  
+- **Deploy-Friendly** – Vite + React SPA for the frontend, Vercel serverless functions for AI/Notion/Supabase glue code, and migrations managed via Supabase CLI.
 
 ---
 
-## 📦 Installation
+## Architecture Overview
 
-### Prerequisites
-```bash
-Node.js 18+
-npm or pnpm
-Supabase account (free tier)
-Groq API key (free at https://console.groq.com)
 ```
+Browser (React PWA)
+ ├─ Voice recorder & file uploader
+ ├─ Result editor (AI refined + original text)
+ ├─ Memo list (filters, bulk ops, sharing)
+ │
+ │  React Query ↔ Supabase JS client
+ │
+ └─ Zustand store for language selection & UI state
 
-### Setup
+Serverless (Vercel Functions)
+ ├─ /api/refine        → LangChain + Groq to clean/refine text
+ ├─ /api/memo          → CRUD passthrough to Supabase (legacy REST surface)
+ ├─ /api/notion-test   → Validate Notion API key/database
+ └─ /api/notion-sync   → Push curated memo content to Notion pages
 
-1. **Clone and install dependencies**
-```bash
-cd frontend
-npm install
-```
-
-2. **Set up environment variables**
-```bash
-cp .env.local.example .env.local
-# Edit .env.local with your keys
-```
-
-3. **Initialize Supabase**
-```bash
-# Run migrations
-supabase db push
-```
-
-4. **Start development server**
-```bash
-npm run dev
+Database (Supabase / Postgres)
+ ├─ memos table with refined/original text, tags, contexts, insights
+ ├─ Triggers for search_vector + updated_at
+ └─ RLS policies for user-scoped access
 ```
 
 ---
 
-## 🗂️ Project Structure
+## Repository Layout
 
 ```
 017_simple_memo/
-├── frontend/                  # React PWA
+├── api/                     # Vercel serverless functions
+│   ├── memo.ts              # REST shim around Supabase memos table
+│   ├── refine.ts            # LangChain pipeline using Groq
+│   ├── notion-sync.ts       # Bulk export memos to Notion
+│   └── notion-test.ts       # Connectivity test endpoint
+├── frontend/                # React + Vite application
 │   ├── src/
-│   │   ├── components/       # UI components
-│   │   ├── hooks/           # Custom hooks
-│   │   ├── lib/             # Utilities
-│   │   ├── pages/           # Route pages
-│   │   ├── store/           # Zustand stores
-│   │   └── types/           # TypeScript types
-│   └── public/              # Static assets
-├── api/                      # Vercel Serverless
-│   ├── refine.ts            # LangChain AI refinement
-│   ├── memo.ts              # CRUD operations
-│   └── search.ts            # Full-text search
-└── supabase/
-    └── migrations/          # Database schema
+│   │   ├── pages/           # Home, Record, Write, Result, MemoList, Settings
+│   │   ├── hooks/           # Supabase and AI hooks (auto save, bulk ops)
+│   │   ├── lib/             # i18n, tag styling, Notion helpers
+│   │   ├── components/      # UI building blocks (TagEditor, Audio controls)
+│   │   └── types/           # Shared TS definitions (Memo, contexts)
+│   └── public/              # Static icons, manifest, PWA assets
+├── supabase/                # SQL migrations (001–005) + policies
+├── docs/                    # Design notes, product briefs
+├── MIGRATION_GUIDE.md       # Transition notes (summary → refined)
+└── vercel.json              # Build/Install commands for deployment
 ```
 
 ---
 
-## 🚀 Usage
+## Prerequisites
 
-### Recording a Memo
-
-1. Click the **🎙️ Record** button
-2. Speak your thoughts (auto-transcription)
-3. Review AI-refined summary
-4. Edit tags/context if needed
-5. Save to database
-
-### Text Input
-
-1. Click **✍️ Write** button
-2. Type your memo (200 char limit)
-3. AI refines and categorizes
-4. Save
-
-### Searching Memos
-
-- Use the search bar for full-text search
-- Filter by tags (multi-select)
-- Filter by context (single-select)
-- Sort by date
+- **Node.js ≥ 18** (matches Vite & Vercel runtime requirements)  
+- **npm** or **pnpm**  
+- **Supabase CLI** (optional but recommended for local DB/migrations)  
+- **Vercel CLI** for running serverless functions locally  
+- **Groq API key** (free tier) or alternative LLM endpoint if you adapt the prompt  
+- Supabase project (Postgres database + anon key + service-role key)
 
 ---
 
-## 🗃️ Database Schema
+## Setup & Configuration
 
-### Memos Table
+1. **Clone the repo**
+   ```bash
+   git clone https://github.com/davidlikescat/017_Snap_Note.git
+   cd 017_Snap_Note
+   ```
+
+2. **Install dependencies**
+   ```bash
+   npm install --prefix api
+   npm install --prefix frontend
+   ```
+
+3. **Environment variables**
+
+   - Frontend (`frontend/.env.local`)
+     ```bash
+     VITE_SUPABASE_URL=https://your-project.supabase.co
+     VITE_SUPABASE_ANON_KEY=anon-key
+     VITE_GROQ_API_KEY=gsk_xxx
+     # Optional providers
+     VITE_OPENROUTER_API_KEY=sk-or-xxx
+     VITE_OLLAMA_BASE_URL=http://localhost:11434
+     VITE_APP_NAME=Snap Note
+     ```
+
+   - Serverless functions (Vercel Project or `api/.env`)
+     ```bash
+     SUPABASE_URL=https://your-project.supabase.co
+     SUPABASE_SERVICE_ROLE_KEY=service-role-key
+     GROQ_API_KEY=gsk_xxx
+     ```
+     > Never expose the service-role key in client code; keep it on the serverless side only.
+
+4. **Database migration (Supabase)**
+   ```bash
+    supabase link --project-ref <ref>       # optional if not already linked
+    supabase db push                       # applies 001–005 migrations
+   ```
+
+5. **Run locally**
+   ```bash
+   # Start browser app
+   cd frontend
+   npm run dev
+
+   # In another terminal (optional serverless emulation)
+   cd ../api
+   npm run dev    # wraps `vercel dev`
+   ```
+
+6. **Deploy (Vercel)**
+   - `vercel.json` already instructs Vercel to install both workspaces:
+     ```json
+     {
+       "installCommand": "npm install --prefix api && npm install --prefix frontend",
+       "buildCommand": "npm run build --prefix frontend",
+       "outputDirectory": "frontend/dist"
+     }
+     ```
+   - Provide the environment variables in the Vercel dashboard before triggering a build.
+
+---
+
+## Core Workflows
+
+### Capture & Refine
+- **Record** uses the Web Speech API for in-browser STT and pushes audio metadata + raw transcript to the Result screen.  
+- **Write** accepts manual text (or file uploads) up to `VITE_MAX_TEXT_LENGTH` characters; it triggers AI refinement automatically once the text, tags, and language are detected.
+
+During refinement the Result view shows:
+- Live progress messages/logs from the LangChain pipeline  
+- Automatic save once refined text, at least one tag, and original text are present  
+- A fallback banner if the Groq call fails (e.g., missing key or timeout)
+
+### Organize & Browse
+- `MemoList` provides search, language/context/tag filters, and inline editing.  
+- Tags render with “Notion-like” palette chips and are localized when available.  
+- Bulk selection supports move/share/export/delete actions; delete runs in 50-item chunks and surfaces a spinner + `processed/total` counter to avoid Supabase timeouts.
+
+### Share & Integrate
+- The share menu enables:
+  - **System Share** via the Web Share API (mobile-friendly)
+  - **Notion Sync** using `/api/notion-sync`, with a companion `/api/notion-test` endpoint in Settings to validate credentials
+  - **Markdown Export** for quick backups
+- Settings persist Notion API details and language preferences in local storage.
+
+---
+
+## Data Model (simplified)
+
 ```sql
 CREATE TABLE memos (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  summary TEXT NOT NULL CHECK (char_length(summary) <= 200),
-  tags TEXT[] NOT NULL CHECK (array_length(tags, 1) <= 3),
+  refined TEXT CHECK (char_length(refined) <= 1000),
+  original_text TEXT NOT NULL,
+  tags TEXT[] NOT NULL,
   context TEXT NOT NULL,
   insight TEXT,
-  original_text TEXT NOT NULL,
+  language TEXT DEFAULT 'en',
   audio_url TEXT,
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  updated_at TIMESTAMPTZ DEFAULT NOW()
+  is_deleted BOOLEAN DEFAULT FALSE,
+  notion_synced BOOLEAN,
+  notion_page_id TEXT,
+  created_at TIMESTAMPTZ DEFAULT now(),
+  updated_at TIMESTAMPTZ DEFAULT now(),
+  search_vector TSVECTOR
 );
 ```
 
----
-
-## 🏷️ Tag Categories
-
-### Available Tags
-- **Ideas**: #idea, #inspiration, #concept, #brainstorm
-- **Learning**: #learning, #notes, #insight, #coaching
-- **Reflection**: #emotion, #reflection, #gratitude, #diary
-- **People**: #people, #conversation, #observation, #feedback
-- **Business**: #work, #project, #marketing, #strategy
-- **Philosophy**: #philosophy, #values, #mindset, #belief
-- **Creative**: #writing, #content, #story
-- **Goals**: #vision, #goals, #future, #habits
-
-### Context Types
-- Idea, Work Memo, Meeting Notes, Teaching Idea
-- Coaching Note, Personal Reflection, Memory Log
-- Observation Note, Inspiration, Philosophy Memo
-- Content Idea, Story Note, Goal Setting, Habit Log
+Migrations add support for multilingual search vectors, Notion sync metadata, and session-based access control.
 
 ---
 
-## 🔧 Configuration
+## Troubleshooting
 
-### Environment Variables
-
-```bash
-# Supabase
-VITE_SUPABASE_URL=https://xxx.supabase.co
-VITE_SUPABASE_ANON_KEY=eyJxxx...
-
-# Groq API (FREE)
-GROQ_API_KEY=gsk_xxx
-
-# Optional: OpenRouter (multiple free models)
-OPENROUTER_API_KEY=sk-or-xxx
-```
+| Issue | Cause | Fix |
+|-------|-------|-----|
+| `Fallback Mode` banner on Result | Groq request failed, JSON parse error, or API key missing | Check Vercel logs for `/api/refine`, confirm `GROQ_API_KEY`, inspect raw response |
+| Bulk delete spins forever | Large `UPDATE … IN` call timing out | The app now deletes in 50-item chunks and shows progress; if it still stalls, run a filtered `UPDATE/DELETE` via Supabase SQL |
+| Vercel build looks for `frontend/api/package.json` | Legacy `--prefix` behavior | `vercel.json` already pins the working install command (`npm install --prefix api && npm install --prefix frontend`) |
+| Notion sync fails | Wrong database permissions or API key | Use Settings → “Test Connection” (calls `/api/notion-test`) to verify credentials and add integration to the database |
 
 ---
 
-## 🎨 AI Prompt Configuration
+## Roadmap Ideas
 
-The AI refinement prompt is in [`api/refine.ts`](api/refine.ts). Customize it to change:
-- Summary style
-- Tag selection logic
-- Insight generation
-
----
-
-## 📱 PWA Installation
-
-### Desktop
-1. Visit the app URL
-2. Click the install icon in the address bar
-3. App opens in standalone window
-
-### Mobile
-1. Open in Safari/Chrome
-2. Tap "Add to Home Screen"
-3. Launch like a native app
+- Optional background queue for long-running exports  
+- Unit tests around `tagStyles` and AI prompt helpers  
+- Additional LLM providers (OpenRouter profiles, local Ollama)  
+- UI for managing custom tag sets per language
 
 ---
 
-## 🛣️ Roadmap
+## License & Credits
 
-### Phase 1 (MVP) ✅
-- [x] Voice recording + STT
-- [x] AI refinement with LangChain
-- [x] Basic CRUD operations
-- [x] Tag/context filtering
+This project builds on open tooling (React, Supabase, Groq, LangChain) and is MIT-licensed.  
+Refer to each dependency’s license for redistribution terms. Contributions and issue reports are welcome! 🎉
 
-### Phase 2 (Upcoming)
-- [ ] User authentication (Supabase Auth)
-- [ ] Export to CSV/Notion
-- [ ] AI weekly summaries
-- [ ] Offline sync
-
-### Phase 3 (Future)
-- [ ] Semantic search (embeddings)
-- [ ] Voice playback
-- [ ] Multi-language support expansion
-- [ ] Mobile apps (React Native)
-
----
-
-## 💰 Cost Analysis (MVP)
-
-| Service | Free Tier | Cost at 1000 memos/month |
-|---------|-----------|--------------------------|
-| Groq API | 14,400 requests/day | $0 |
-| Supabase | 500MB database | $0 |
-| Vercel | 100GB bandwidth | $0 |
-| **Total** | | **$0** |
-
----
-
-## 🤝 Contributing
-
-Contributions welcome! Please:
-1. Fork the repo
-2. Create a feature branch
-3. Submit a PR with tests
-
----
-
-## 📄 License
-
-MIT License - feel free to use for personal or commercial projects
-
----
-
-## 🙋 Support
-
-- 📖 [Documentation](./docs/)
-- 🐛 [Report Issues](https://github.com/yourusername/mind-note/issues)
-- 💬 [Discussions](https://github.com/yourusername/mind-note/discussions)
-
----
-
-**Built with ❤️ using LangChain, React, and Supabase**

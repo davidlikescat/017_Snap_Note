@@ -36,8 +36,7 @@ export default function Result() {
 
   const [isEditing, setIsEditing] = useState(false);
   const [refined, setRefined] = useState('');  // summary -> refined
-  const [tags, setTags] = useState<string[]>([]);
-  const [newTag, setNewTag] = useState('');  // 신규 태그 입력
+  const [tag, setTag] = useState<string>('');
   const [context, setContext] = useState<MemoContext>('Memory Archive');
   const [insight, setInsight] = useState('');
   const [originalText, setOriginalText] = useState('');
@@ -60,7 +59,7 @@ export default function Result() {
     if (state?.refinedData) {
       // Data already refined (from Write page)
       setRefined(state.refinedData.refined);
-      setTags(state.refinedData.tags);
+      setTag(state.refinedData.tag);
       setContext(state.refinedData.context);
       setInsight(state.refinedData.insight || '');
       setOriginalText(state.originalText || '');
@@ -75,7 +74,7 @@ export default function Result() {
       refineControls.refineText(state.originalText).then((result) => {
         if (result) {
           setRefined(result.refined);
-          setTags(result.tags);
+          setTag(result.tag);
           setContext(result.context as MemoContext);
           setInsight(result.insight || '');
           if (result.language) {
@@ -140,7 +139,7 @@ export default function Result() {
     performAutoSave();
   }, [
     refined,
-    tags,
+    tag,
     context,
     insight,
     originalText,
@@ -160,7 +159,7 @@ export default function Result() {
 
     const currentSnapshot = JSON.stringify({
       refined: refined.trim(),
-      tags,
+      tag,
       context,
       insight: insight.trim(),
     });
@@ -169,7 +168,7 @@ export default function Result() {
       autoSaveAttemptedRef.current = false;
       setAutoSaveState('idle');
     }
-  }, [refined, tags, context, insight, autoSaveState]);
+  }, [refined, tag, context, insight, autoSaveState]);
 
   const handleSave = async () => {
     if (refined.trim().length === 0) {
@@ -177,8 +176,8 @@ export default function Result() {
       return;
     }
 
-    if (tags.length === 0) {
-      toast.error('Please select at least one tag');
+    if (!tag || tag.trim().length === 0) {
+      toast.error('Please select a tag');
       return;
     }
 
@@ -187,7 +186,7 @@ export default function Result() {
       setAutoSaveState('saving');
       await createMemoAsync({
         refined: refined.trim(),
-        tags,
+        tag,
         context,
         insight: insight.trim() || undefined,
         original_text: originalText,
@@ -196,7 +195,7 @@ export default function Result() {
 
       lastSavedSnapshotRef.current = JSON.stringify({
         refined: refined.trim(),
-        tags,
+        tag,
         context,
         insight: insight.trim(),
       });
@@ -210,53 +209,8 @@ export default function Result() {
     }
   };
 
-  const handleTagToggle = (tag: string) => {
-    if (tags.includes(tag)) {
-      setTags(tags.filter((t) => t !== tag));
-    } else {
-      if (tags.length < 3) {
-        setTags([...tags, tag]);
-      } else {
-        toast.error('Maximum 3 tags allowed');
-      }
-    }
-  };
-
-  const handleAddNewTag = () => {
-    const trimmedTag = newTag.trim();
-
-    if (!trimmedTag) {
-      toast.error('Please enter a tag');
-      return;
-    }
-
-    // # 자동 추가
-    const formattedTag = trimmedTag.startsWith('#') ? trimmedTag : `#${trimmedTag}`;
-
-    if (tags.includes(formattedTag)) {
-      toast.error('Tag already exists');
-      return;
-    }
-
-    if (tags.length >= 3) {
-      toast.error('Maximum 3 tags allowed');
-      return;
-    }
-
-    // Add to current memo tags
-    setTags([...tags, formattedTag]);
-
-    // Save to custom tags for this language (if not already in default tags)
-    if (!availableTags.includes(formattedTag)) {
-      addCustomTag(language, formattedTag);
-    }
-
-    setNewTag('');
-    toast.success(`Tag "${formatTagLabel(formattedTag)}" added`);
-  };
-
-  const handleRemoveTag = (tagToRemove: string) => {
-    setTags(tags.filter(t => t !== tagToRemove));
+  const handleTagSelect = (selectedTag: string) => {
+    setTag(selectedTag);
   };
 
   const availableTags = getTagsForLanguage(language);
@@ -389,88 +343,38 @@ export default function Result() {
               )}
             </div>
 
-            {/* Tags */}
+            {/* Tag */}
             <div className="space-y-3">
               <label className="text-sm font-semibold text-muted-foreground">
-                Tags {isEditing && <span className="text-xs">({tags.length}/3)</span>}
+                Tag (Primary Label)
               </label>
 
-              {/* Selected Tags */}
-              <div className="flex flex-wrap gap-2">
-                {tags.map((tag) => {
-                  const palette = getTagStyleClasses(tag);
-                  return (
-                    <span
-                      key={tag}
-                      className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-sm font-medium transition-colors ${palette.badge}`}
-                    >
-                      <span className={`h-2 w-2 rounded-full ${palette.dot}`} />
-                      <span>{formatTagLabel(tag)}</span>
-                      {isEditing && (
-                        <button
-                          onClick={() => handleRemoveTag(tag)}
-                          className="ml-1 flex items-center justify-center rounded-full p-0.5 hover:bg-destructive/10 hover:text-destructive transition-colors"
-                        >
-                          <X className="h-3 w-3" />
-                        </button>
-                      )}
-                    </span>
-                  );
-                })}
-              </div>
-
-              {/* Add Custom Tag */}
-              {isEditing && (
-                <div className="space-y-2">
-                  <div className="flex gap-2">
-                    <input
-                      type="text"
-                      value={newTag}
-                      onChange={(e) => setNewTag(e.target.value)}
-                      onKeyPress={(e) => e.key === 'Enter' && handleAddNewTag()}
-                      placeholder="Add custom tag (e.g., 회고, review)"
-                      className="flex-1 px-3 py-2 rounded-lg border border-border bg-background focus:outline-none focus:ring-2 focus:ring-ring text-sm"
-                    />
-                    <button
-                      onClick={handleAddNewTag}
-                      disabled={tags.length >= 3}
-                      className="flex items-center gap-1 px-3 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed hover:bg-primary/90 transition-colors"
-                    >
-                      <Plus className="h-4 w-4" />
-                      Add
-                    </button>
-                  </div>
-
-                  {/* Recommended Tags */}
-                  <details className="text-sm">
-                    <summary className="cursor-pointer text-muted-foreground hover:text-foreground">
-                      Or select from recommended tags
-                    </summary>
-                    <div className="grid grid-cols-2 gap-2 mt-2">
-                      {availableTags.map((tag) => {
-                        const palette = getTagStyleClasses(tag);
-                        const isSelected = tags.includes(tag);
-                        return (
-                          <button
-                            key={tag}
-                            onClick={() => handleTagToggle(tag)}
-                            disabled={isSelected}
-                            className={`flex items-center justify-between gap-2 px-3 py-2 rounded-lg border text-sm font-medium transition-colors ${
-                              isSelected
-                                ? 'opacity-60 cursor-not-allowed border-border bg-muted/60'
-                                : 'hover:bg-muted/60 border-border bg-background'
-                            }`}
-                          >
-                            <span className="inline-flex items-center gap-2">
-                              <span className={`h-2.5 w-2.5 rounded-full ${palette.dot}`} />
-                              <span>{formatTagLabel(tag)}</span>
-                            </span>
-                            {!isSelected && <Plus className="h-3 w-3 text-muted-foreground" />}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </details>
+              {isEditing ? (
+                <select
+                  value={tag}
+                  onChange={(e) => handleTagSelect(e.target.value)}
+                  className="w-full p-3 rounded-lg border border-border bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                >
+                  <option value="">Select a tag...</option>
+                  {availableTags.map((availableTag) => (
+                    <option key={availableTag} value={availableTag}>
+                      {formatTagLabel(availableTag)}
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <div className="flex flex-wrap gap-2">
+                  {tag && (() => {
+                    const palette = getTagStyleClasses(tag);
+                    return (
+                      <span
+                        className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-sm font-medium transition-colors ${palette.badge}`}
+                      >
+                        <span className={`h-2 w-2 rounded-full ${palette.dot}`} />
+                        <span>{formatTagLabel(tag)}</span>
+                      </span>
+                    );
+                  })()}
                 </div>
               )}
             </div>
