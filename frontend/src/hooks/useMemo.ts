@@ -8,7 +8,7 @@ const QUERY_KEY = 'memos';
 function normalizeMemo(row: any): Memo {
   return {
     id: row.id,
-    refined: row.refined ?? row.summary ?? '',
+    refined: row.refined ?? '',
     tag: row.tag ?? '',
     context: row.context,
     insight: row.insight ?? null,
