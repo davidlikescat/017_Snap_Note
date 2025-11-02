@@ -21,13 +21,13 @@ export interface RefineControls {
 import type { AppLanguage } from '@/stores/useLanguageStore';
 
 const FALLBACK_CONTEXT: MemoContext = 'Memory Archive';
-const FALLBACK_TAGS: Record<AppLanguage, string[]> = {
-  en: ['#memo', '#thought', '#note'],
-  ko: ['#메모', '#생각', '#기록'],
-  ja: ['#メモ', '#アイデア', '#ノート'],
-  es: ['#nota', '#idea', '#pensamiento'],
-  fr: ['#note', '#idée', '#mémo'],
-  de: ['#notiz', '#idee', '#gedanke'],
+const FALLBACK_TAG: Record<AppLanguage, string> = {
+  en: '#memo',
+  ko: '#메모',
+  ja: '#メモ',
+  es: '#nota',
+  fr: '#note',
+  de: '#notiz',
 };
 
 export function useRefine(): [RefineState, RefineControls] {
@@ -94,7 +94,7 @@ export function useRefine(): [RefineState, RefineControls] {
 
       const refinementResult: AIRefinementResult = {
         refined: data.refined,
-        tags: data.tags,
+        tag: data.tag,
         context: data.context as MemoContext,
         insight: data.insight ?? '',
         language: data.language,
@@ -102,7 +102,7 @@ export function useRefine(): [RefineState, RefineControls] {
       };
 
       addLog('🎉 [DEBUG] AI refinement successful!');
-      addLog(`📊 [DEBUG] Tags: ${refinementResult.tags.join(', ')}`);
+      addLog(`📊 [DEBUG] Tag: ${refinementResult.tag}`);
       addLog(`📊 [DEBUG] Context: ${refinementResult.context}`);
 
       setResult(refinementResult);
@@ -114,10 +114,10 @@ export function useRefine(): [RefineState, RefineControls] {
 
       addLog('⚠️ [DEBUG] Using FALLBACK result');
       const language = detectLanguage(text);
-      const fallbackTags = FALLBACK_TAGS[language] ?? FALLBACK_TAGS.en;
+      const fallbackTag = FALLBACK_TAG[language] ?? FALLBACK_TAG.en;
       const fallbackResult: AIRefinementResult = {
         refined: text.slice(0, 1000),
-        tags: fallbackTags,
+        tag: fallbackTag,
         context: FALLBACK_CONTEXT,
         insight: '',
         language,

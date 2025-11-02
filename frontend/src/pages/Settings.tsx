@@ -183,7 +183,7 @@ export default function Settings() {
         new Date(memo.created_at).toISOString(),
         memo.language,
         memo.context,
-        memo.tags.join('; '),
+        memo.tag,
         `"${memo.original_text.replace(/"/g, '""')}"`,
         `"${memo.refined.replace(/"/g, '""')}"`,
         memo.insight ? `"${memo.insight.replace(/"/g, '""')}"` : '',
@@ -228,7 +228,7 @@ export default function Settings() {
         markdown += `- **Date:** ${new Date(memo.created_at).toLocaleString()}\n`;
         markdown += `- **Language:** ${memo.language.toUpperCase()}\n`;
         markdown += `- **Context:** ${memo.context}\n`;
-        markdown += `- **Tags:** ${memo.tags.join(', ')}\n\n`;
+        markdown += `- **Tag:** ${memo.tag}\n\n`;
         markdown += `### AI Refined\n\n${memo.refined}\n\n`;
         markdown += `### Original Text\n\n${memo.original_text}\n\n`;
         if (memo.insight) {

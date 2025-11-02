@@ -94,7 +94,7 @@ export default function Record() {
         console.log('💾 [DEBUG] Saving to database...');
         await createMemo.mutateAsync({
           refined: refinedData.refined,
-          tags: refinedData.tags,
+          tag: refinedData.tag,
           context: refinedData.context as MemoContext,
           insight: refinedData.insight || undefined,
           original_text: transcript.trim(),

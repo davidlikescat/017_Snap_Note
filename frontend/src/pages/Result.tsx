@@ -103,7 +103,7 @@ export default function Result() {
       return;
     }
 
-    if (refined.trim().length === 0 || tags.length === 0 || originalText.trim().length === 0) {
+    if (refined.trim().length === 0 || !tag || tag.trim().length === 0 || originalText.trim().length === 0) {
       return;
     }
 
@@ -113,7 +113,7 @@ export default function Result() {
       try {
         const savedMemo = await createMemoAsync({
           refined: refined.trim(),
-          tags,
+          tag,
           context,
           insight: insight.trim() || undefined,
           original_text: originalText,
@@ -122,7 +122,7 @@ export default function Result() {
 
         lastSavedSnapshotRef.current = JSON.stringify({
           refined: savedMemo.refined,
-          tags: savedMemo.tags,
+          tag: savedMemo.tag,
           context: savedMemo.context,
           insight: savedMemo.insight ?? '',
         });
@@ -449,7 +449,7 @@ export default function Result() {
                   isSaving ||
                   autoSaveState === 'saving' ||
                   refined.trim().length === 0 ||
-                  tags.length === 0
+                  !tag || tag.trim().length === 0
                 )
               }
               className="flex-1 flex items-center justify-center space-x-2 bg-primary text-primary-foreground py-4 rounded-lg font-semibold disabled:opacity-50 disabled:cursor-not-allowed hover:bg-primary/90 transition-colors"
