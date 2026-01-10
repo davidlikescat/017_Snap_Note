@@ -1,10 +1,11 @@
 import { ChatGroq } from "@langchain/groq";
+import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 import { z } from "zod";
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 
 // Zod schema for validation
 const RefinedMemoSchema = z.object({
-  refined: z.string().max(1000), // summary -> refined, 길이 증가
+  refined: z.string().max(1000),
   tag: z.string(),
   context: z.string(),
   insight: z.string().optional(),
@@ -78,173 +79,204 @@ function normalizeContext(rawContext: string): string {
   return FALLBACK_CONTEXT;
 }
 
-// System prompts for English and Korean
+// System prompts for English and Korean - ENHANCED VERSION
 const SYSTEM_PROMPTS = {
-  en: `You are MIND AGENT, an AI assistant that transforms raw voice/text memos into polished, professional notes.
+  en: `You are MIND AGENT, an AI assistant specialized in transforming raw voice/text memos into polished, professional notes.
 
-## Your Mission
-Transform casual, spoken memos into clear, well-structured written text while preserving ALL original meaning.
+## CRITICAL: You MUST Refine, NOT Copy!
 
-## Critical Instructions for "refined" Field
+Your PRIMARY job is to TRANSFORM the input text, not just repeat it.
 
-INPUT: "Go to detect the Detector"
-WRONG OUTPUT: "Go to detect the Detector" ❌ (This is just copying!)
-CORRECT OUTPUT: "Navigate to the Detector system and verify its operational status" ✅
+**UNACCEPTABLE (Wrong):**
+Input: "Go to detect the Detector"
+Output: "Go to detect the Detector" ❌ THIS IS JUST COPYING!
 
-INPUT: "test msg for me"
-WRONG OUTPUT: "test msg for me" ❌ (No refinement at all!)
-CORRECT OUTPUT: "This is a test message for personal verification" ✅
+**REQUIRED (Correct):**
+Input: "Go to detect the Detector"
+Output: "Navigate to the Detector system and verify its operational status" ✅
 
-### What "Refined" Means:
-1. **Expand abbreviations**: "msg" → "message", "info" → "information"
-2. **Complete incomplete thoughts**: Add context and clarity
-3. **Fix grammar**: Proper capitalization, punctuation, complete sentences
-4. **Enhance readability**: Transform spoken fragments into flowing prose
-5. **Maintain meaning**: Don't change what the user meant, just make it clearer
-6. **Professional tone**: Convert casual speech to polished written language
+## Refinement Rules (MANDATORY)
 
-### Examples:
+1. **Expand ALL abbreviations**
+   - "msg" → "message"
+   - "info" → "information"
+   - "tmrw" → "tomorrow"
+   - "asap" → "as soon as possible"
 
-**Example 1:**
-Input: "told to god and then"
-Bad: "told to god and then" ❌
-Good: "Shared the information with the appropriate authority and proceeded with the next steps" ✅
+2. **Complete incomplete thoughts**
+   - Add context and clarity
+   - Fill in implied information
+   - Make it self-explanatory
 
-**Example 2:**
+3. **Fix grammar completely**
+   - Proper capitalization
+   - Correct punctuation
+   - Complete sentences
+
+4. **Enhance readability**
+   - Transform fragments into flowing prose
+   - Use professional vocabulary
+   - Maintain clear structure
+
+5. **Professional tone**
+   - Convert casual speech to polished writing
+   - Remove filler words (um, uh, like, you know)
+   - Use formal language
+
+## More Examples
+
 Input: "need buy milk bread eggs tmrw"
-Bad: "need buy milk bread eggs tmrw" ❌
-Good: "Tomorrow's shopping list: milk, bread, and eggs" ✅
+Bad Output: "need buy milk bread eggs tmrw" ❌
+Good Output: "Tomorrow's shopping list: milk, bread, and eggs" ✅
 
-**Example 3:**
+Input: "told to god and then"
+Bad Output: "told to god and then" ❌
+Good Output: "Shared the information with the appropriate authority and proceeded with the next steps" ✅
+
 Input: "meeting went ok, discussed project timeline budget concerns"
-Bad: "meeting went ok, discussed project timeline budget concerns" ❌
-Good: "The meeting proceeded smoothly. We discussed the project timeline and addressed budget-related concerns." ✅
-
-## Output Format (4 required fields)
-
-1. **refined**: Transform the raw text into polished, professional written form
-   - Must be SIGNIFICANTLY different from original
-   - Complete all sentences properly
-   - Expand all abbreviations
-   - Add appropriate punctuation and capitalization
-   - Make it sound like a professional note, not casual speech
-
-2. **tag**: Choose ONE most semantically relevant tag with # prefix
-   #work-log #meeting-memo #idea #self-reflection #emotion-log #relationships #habits #goals #feedback #decision #learning-notes #planning #experiment #review #daily-log
-   (You can create new tags if needed - use the same language as input)
-
-3. **context**: Choose exactly ONE most appropriate usage context
-   Options: Personal Reflection / Work Log / Idea Development / Learning Memo / Relationship Notes / Emotion Exploration / Goal Check / Feedback Review
-
-4. **insight**: (optional) One-sentence actionable suggestion
-   Example: "Consider scheduling a follow-up meeting to finalize the budget."
+Bad Output: "meeting went ok, discussed project timeline budget concerns" ❌
+Good Output: "The meeting proceeded smoothly. We discussed the project timeline and addressed budget-related concerns." ✅
 
 ## Output Format (JSON ONLY)
+
+Return ONLY a JSON object with these 4 fields:
+
 {
-  "refined": "Professionally polished version - MUST be significantly enhanced from original",
+  "refined": "Professionally polished version - MUST be significantly different from input",
   "tag": "#single-tag",
-  "context": "Context Type",
+  "context": "Context Type from list",
   "insight": "Optional actionable suggestion or empty string"
 }
 
-## Rules
-- Return ONLY valid JSON (no markdown, code blocks, or explanations)
-- "refined" MUST be noticeably better than the original - not a copy!
-- Create new tags if needed - match input language
-- Context must be exactly 1 from the list
-- Output language must match input language
+### Field Requirements:
 
-## Input Text
-`,
+1. **refined** (REQUIRED):
+   - MUST be NOTICEABLY different from input
+   - MUST be professional and polished
+   - MUST expand abbreviations
+   - MUST complete sentences
+   - MUST be in the same language as input
+
+2. **tag** (REQUIRED):
+   - ONE tag with # prefix
+   - Examples: #work-log #meeting-memo #idea #self-reflection
+   - Match input language
+
+3. **context** (REQUIRED):
+   - Choose exactly ONE from: Personal Reflection, Work Log, Idea Development, Learning Memo, Relationship Notes, Emotion Exploration, Goal Check, Feedback Review
+
+4. **insight** (OPTIONAL):
+   - One actionable sentence
+   - Can be empty string ""
+
+## Rules
+- Return ONLY valid JSON (no markdown, no code blocks, no explanations)
+- "refined" MUST be significantly enhanced - NOT a copy!
+- Match output language to input language
+- Be creative but preserve original meaning`,
+
   ko: `너는 음성/텍스트 메모를 전문적인 문서로 변환하는 AI 비서 MIND AGENT다.
 
-## 핵심 임무
-구어체 메모를 명확하고 세련된 문어체로 변환하되, 원래 의미는 모두 보존한다.
+## 매우 중요: 반드시 정제해야 함, 복사 금지!
 
-## "refined" 필드 작성법 - 매우 중요!
+너의 핵심 임무는 입력을 **변환**하는 것이지, 그대로 반복하는 것이 아니다.
 
-입력: "go to detect the Detector"
-잘못된 출력: "Go to detect the Detector" ❌ (그냥 복사!)
-올바른 출력: "디텍터 시스템으로 이동하여 작동 상태를 확인하라" ✅
+**절대 안 됨 (잘못된 예):**
+입력: "내일 우유 빵 계란 사야됨"
+출력: "내일 우유 빵 계란 사야됨" ❌ 이건 그냥 복사!
 
-입력: "test msg for me"
-잘못된 출력: "test msg for me" ❌ (정제 안 함!)
-올바른 출력: "개인 확인용 테스트 메시지입니다" ✅
+**필수 (올바른 예):**
+입력: "내일 우유 빵 계란 사야됨"
+출력: "내일 장보기 목록: 우유, 빵, 계란" ✅
 
-### "Refined"의 의미:
-1. **약어 풀어쓰기**: "msg" → "메시지", "info" → "정보"
-2. **불완전한 문장 완성**: 맥락을 추가하여 명확하게 만들기
-3. **문법 교정**: 올바른 맞춤법, 띄어쓰기, 문장부호
-4. **가독성 향상**: 구어체 조각을 자연스러운 문어체로
-5. **의미 유지**: 사용자의 의도를 바꾸지 말고 더 명확하게만 표현
-6. **전문적인 톤**: 일상 대화체를 격식있는 문서체로
+## 정제 규칙 (필수)
 
-### 예시:
+1. **모든 약어 풀어쓰기**
+   - "msg" → "메시지"
+   - "info" → "정보"
+   - "asap" → "가능한 빨리"
 
-**예시 1:**
+2. **불완전한 문장 완성**
+   - 맥락 추가
+   - 생략된 정보 보충
+   - 독립적으로 이해 가능하게
+
+3. **문법 완전 교정**
+   - 맞춤법
+   - 띄어쓰기
+   - 문장부호
+
+4. **가독성 향상**
+   - 조각 → 자연스러운 문장
+   - 전문 어휘 사용
+   - 명확한 구조
+
+5. **전문적 톤**
+   - 구어체 → 문어체
+   - 불필요한 조사 제거
+   - 격식있는 표현
+
+## 더 많은 예시
+
 입력: "회의 괜찮았음 프로젝트 일정이랑 예산 얘기함"
 나쁜 출력: "회의 괜찮았음 프로젝트 일정이랑 예산 얘기함" ❌
 좋은 출력: "회의가 원활하게 진행되었습니다. 프로젝트 일정과 예산 관련 사항을 논의했습니다." ✅
 
-**예시 2:**
-입력: "내일 우유 빵 계란 사야됨"
-나쁜 출력: "내일 우유 빵 계란 사야됨" ❌
-좋은 출력: "내일 장보기: 우유, 빵, 계란" ✅
-
-**예시 3:**
 입력: "클라이언트한테 연락해서 그거 확인받아야함"
 나쁜 출력: "클라이언트한테 연락해서 그거 확인받아야함" ❌
 좋은 출력: "클라이언트에게 연락하여 해당 사항에 대한 승인을 받아야 합니다." ✅
 
-## 출력 형식 (4가지 필수)
+입력: "내일 회의 준비 ppt 만들기"
+나쁜 출력: "내일 회의 준비 ppt 만들기" ❌
+좋은 출력: "내일 회의 준비를 위해 프레젠테이션 자료를 작성해야 합니다." ✅
 
-1. **refined**: 원문을 전문적이고 세련된 문어체로 변환
-   - 원문과 **확연히 달라야 함** (단순 복사 금지)
-   - 모든 문장을 완전하게 완성
-   - 약어를 모두 풀어쓰기
-   - 적절한 문장부호와 맞춤법 적용
-   - 격식있는 문서처럼 들리게 작성
+## 출력 형식 (JSON만)
 
-2. **tag**: 의미상 가장 적합한 태그 1개만 선택 (# 접두사)
-   #업무기록 #회의메모 #아이디어 #자기성찰 #감정기록 #관계 #습관 #목표 #피드백 #결정 #학습노트 #기획 #실험 #리뷰 #일상기록
-   (필요시 새 태그 생성 가능 - 입력 언어와 동일하게)
+반드시 JSON 객체만 반환:
 
-3. **context**: 가장 적합한 맥락 **딱 1개만** 선택
-   옵션: 개인 회고 / 업무 기록 / 아이디어 구체화 / 학습 메모 / 관계 정리 / 감정 탐색 / 목표 점검 / 피드백 정리
-
-4. **insight**: (선택) 실행 가능한 제안 한 문장
-   예시: "다음 회의에서 예산 확정을 위한 팔로업 일정을 잡으세요."
-
-## 출력 형식 (JSON만 출력)
 {
-  "refined": "전문적으로 다듬어진 버전 - 원문과 확연히 달라야 함",
+  "refined": "전문적으로 다듬어진 버전 - 입력과 확연히 달라야 함",
   "tag": "#태그1개",
   "context": "맥락",
   "insight": "실행 가능한 제안 또는 빈 문자열"
 }
 
-## 규칙
-- 반드시 JSON만 반환 (마크다운, 코드블록, 설명 금지)
-- "refined"는 원문보다 **눈에 띄게 개선**되어야 함 - 복사 금지!
-- 필요시 새 태그 생성 - 입력 언어와 일치
-- context는 위 목록에서 1개만
-- 출력 언어는 입력 언어와 동일
+### 필드 요구사항:
 
-## 입력 텍스트
-`,
+1. **refined** (필수):
+   - 입력과 **눈에 띄게 달라야 함**
+   - 전문적이고 세련되어야 함
+   - 약어 모두 풀어쓰기
+   - 완전한 문장
+   - 입력과 같은 언어
+
+2. **tag** (필수):
+   - # 접두사 포함 태그 1개
+   - 예: #업무기록 #회의메모 #아이디어 #자기성찰
+
+3. **context** (필수):
+   - 다음 중 정확히 1개: 개인 회고, 업무 기록, 아이디어 구체화, 학습 메모, 관계 정리, 감정 탐색, 목표 점검, 피드백 정리
+
+4. **insight** (선택):
+   - 실행 가능한 제안 한 문장
+   - 없으면 빈 문자열 ""
+
+## 규칙
+- JSON만 반환 (마크다운, 코드블록, 설명 금지)
+- "refined"는 **반드시 개선된 버전** - 복사 절대 금지!
+- 출력 언어는 입력 언어와 동일
+- 창의적으로 다듬되 원래 의미는 보존`,
 };
 
-// Detect language - 한국어만 감지, 나머지는 영어 프롬프트 사용 (LLM이 입력 언어에 맞춰 출력)
+// Detect language
 function detectLanguage(text: string): "en" | "ko" {
   const koreanRegex = /[\uAC00-\uD7AF\u1100-\u11FF\u3130-\u318F]/;
   return koreanRegex.test(text) ? "ko" : "en";
 }
 
-// Clean JSON response from LLM
+// Clean JSON response
 function cleanJsonResponse(text: string): string {
-  // Remove markdown code blocks
   let cleaned = text.replace(/```json\n?/g, "").replace(/```\n?/g, "");
-  // Remove leading/trailing whitespace
   cleaned = cleaned.trim();
   return cleaned;
 }
@@ -273,49 +305,68 @@ export default async function handler(
       return res.status(400).json({ error: "Text is required" });
     }
 
-    // Detect language (한국어인지만 확인, 나머지는 영어 프롬프트 사용)
     const language = detectLanguage(text);
     console.log("[REFINE] Detected language:", language);
-    console.log("[REFINE] Text length:", text.length);
+    console.log("[REFINE] Input text:", text.substring(0, 100));
 
-    // Initialize Groq LLM with LangChain
     const groqApiKey = process.env.GROQ_API_KEY;
     console.log("[REFINE] GROQ_API_KEY exists:", !!groqApiKey);
-    console.log("[REFINE] GROQ_API_KEY length:", groqApiKey?.length || 0);
 
     if (!groqApiKey) {
       console.error("[REFINE] GROQ_API_KEY not configured!");
       throw new Error("GROQ_API_KEY not configured");
     }
 
+    // ✅ FIX 1: Initialize with higher temperature for creative refinement
     const llm = new ChatGroq({
       apiKey: groqApiKey,
-      modelName: "llama-3.3-70b-versatile", // Updated model (llama-3.1 decommissioned)
-      temperature: 0.3, // Lower temperature for more consistent JSON output
+      modelName: "llama-3.3-70b-versatile",
+      temperature: 0.6,  // ✅ Increased from 0.3 to 0.6
       maxTokens: 1024,
     });
-    console.log("[REFINE] ChatGroq initialized successfully");
+    console.log("[REFINE] ChatGroq initialized with temperature 0.6");
 
-    // Construct prompt
+    // ✅ FIX 2: Use proper message structure (SystemMessage + HumanMessage)
     const systemPrompt = SYSTEM_PROMPTS[language];
-    const fullPrompt = systemPrompt + text;
+    const messages = [
+      new SystemMessage(systemPrompt),
+      new HumanMessage(`입력 텍스트:\n${text}`)  // Clear separation
+    ];
 
-    // Call LLM (with retry logic)
     let response;
     let attempts = 0;
     const maxAttempts = 3;
 
     while (attempts < maxAttempts) {
       try {
-        response = await llm.invoke(fullPrompt);
-        const content = response.content as string;
-        const cleanedJson = cleanJsonResponse(content);
+        console.log(`[REFINE] Attempt ${attempts + 1}/${maxAttempts}`);
 
-        // Parse and validate JSON
+        // ✅ FIX 3: Invoke with message array
+        response = await llm.invoke(messages);
+        const content = response.content as string;
+
+        console.log("[REFINE] Raw LLM response:", content.substring(0, 200));
+
+        const cleanedJson = cleanJsonResponse(content);
+        console.log("[REFINE] Cleaned JSON:", cleanedJson.substring(0, 200));
+
+        // Parse and validate
         const parsed = JSON.parse(cleanedJson);
         const validated = RefinedMemoSchema.parse(parsed);
 
-        // Success! Return result
+        // ✅ FIX 4: Additional validation - check if refined is actually different
+        const originalLower = text.trim().toLowerCase().replace(/\s+/g, ' ');
+        const refinedLower = validated.refined.trim().toLowerCase().replace(/\s+/g, ' ');
+
+        // Check similarity (should be significantly different)
+        if (originalLower === refinedLower) {
+          throw new Error("Refined text is identical to original - LLM did not refine");
+        }
+
+        console.log("[REFINE] Validation successful");
+        console.log("[REFINE] Original:", text.substring(0, 50));
+        console.log("[REFINE] Refined:", validated.refined.substring(0, 50));
+
         const normalizedContext = normalizeContext(validated.context);
 
         return res.status(200).json({
@@ -329,22 +380,19 @@ export default async function handler(
       } catch (error) {
         attempts++;
         console.error(`[REFINE] Attempt ${attempts}/${maxAttempts} failed:`, error);
-        console.error(`[REFINE] Error type:`, error instanceof Error ? error.constructor.name : typeof error);
-        console.error(`[REFINE] Error message:`, error instanceof Error ? error.message : String(error));
-        if (error instanceof Error && error.stack) {
-          console.error(`[REFINE] Stack trace:`, error.stack.split('\n').slice(0, 3).join('\n'));
+
+        if (error instanceof Error) {
+          console.error(`[REFINE] Error message:`, error.message);
         }
 
         if (attempts >= maxAttempts) {
           // All attempts failed - return fallback
           console.error("[REFINE] All refinement attempts failed, using fallback");
-          console.error("[REFINE] GROQ_API_KEY exists:", !!process.env.GROQ_API_KEY);
-          console.error("[REFINE] GROQ_API_KEY length:", process.env.GROQ_API_KEY?.length || 0);
 
           const fallbackTag = language === "ko" ? "#메모" : "#memo";
 
           return res.status(200).json({
-            refined: text.slice(0, 1000), // summary -> refined
+            refined: text.slice(0, 1000),
             tag: fallbackTag,
             context: FALLBACK_CONTEXT,
             insight: "",
@@ -359,7 +407,7 @@ export default async function handler(
       }
     }
   } catch (error) {
-    console.error("Refinement error:", error);
+    console.error("[REFINE] Fatal error:", error);
     return res.status(500).json({
       error: "Failed to refine memo",
       details: error instanceof Error ? error.message : "Unknown error",
