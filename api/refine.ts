@@ -322,7 +322,6 @@ export default async function handler(
       apiKey: groqApiKey,
       modelName: "llama-3.3-70b-versatile",
       temperature: 0.6,  // ✅ Increased from 0.3 to 0.6
-      maxTokens: 1024,
     });
     console.log("[REFINE] ChatGroq initialized with temperature 0.6");
 
